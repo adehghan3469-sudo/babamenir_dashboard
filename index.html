@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دفتر فنی ماهور | گزارش روزانه کشاورزی بابامنیر</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--primary:#2e7d32;--primary-dark:#1b5e20;--bg:#f0f4f0;--card:#fff;--text:#1a1a1a;--muted:#5a5a5a;--border:#e0e0e0;--shadow:0 4px 18px rgba(0,0,0,.09);--radius:16px;--tr:all .3s cubic-bezier(.4,0,.2,1)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;min-height:100vh}
+header{background:linear-gradient(135deg,#1b5e20,#2e7d32 50%,#388e3c);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(27,94,32,.3);position:sticky;top:0;z-index:1000}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.2rem;font-weight:700}
+.nav-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 14px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:.88rem;transition:var(--tr)}
+.nav-btn:hover,.nav-btn.active{background:#fff;color:var(--primary-dark);transform:translateY(-1px)}
+.container{max-width:1420px;margin:0 auto;padding:16px}
+.grid{display:grid;grid-template-columns:1fr 2.3fr 1fr;gap:16px}
+@media(max-width:1050px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px;transition:var(--tr);animation:fadeInUp .5s ease both}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.13)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.card-title{font-size:1.05rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ad-card,.exp-card,.tip-card{border-radius:var(--radius);padding:16px;min-height:155px;cursor:pointer;transition:var(--tr)}
+.ad-card{background:linear-gradient(145deg,#e8f5e9,#f1f8e9);border:2px solid #43a047}
+.ad-card:hover{animation:pulse .6s ease}
+.ad-card h4{color:#2e7d32;margin-bottom:8px}
+.ad-card p{color:#1b5e20;font-size:.92rem}
+.exp-card{background:linear-gradient(145deg,#fff8e1,#fffde7);border:2px solid #ffb300}
+.exp-card strong{color:#e65100;display:block;margin-bottom:8px}
+.exp-card p{color:#4e342e;font-size:.9rem;line-height:1.75}
+.tip-card{background:linear-gradient(145deg,#e3f2fd,#e8f5e9);border:2px solid #1976d2}
+.tip-card ul{padding-right:18px;color:#0d47a1;font-size:.9rem}
+.tip-card li{margin-bottom:6px}
+.weather-strip{border-radius:12px;padding:13px 18px;font-weight:600;text-align:center;margin-bottom:14px;font-size:.97rem;transition:all .5s ease;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:700px){.metrics{grid-template-columns:repeat(2,1fr)}}
+.metric{background:linear-gradient(145deg,#f8f9fa,#e8f5e9);border-radius:12px;padding:14px 8px;text-align:center;transition:var(--tr)}
+.metric:hover{transform:scale(1.04)}
+.metric .value{font-size:1.35rem;font-weight:700;color:var(--primary-dark)}
+.metric .label{font-size:.8rem;color:var(--muted);margin-top:4px}
+.service-card{border-radius:var(--radius);padding:24px;text-align:center;color:#fff;min-height:170px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden}
+.service-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent,rgba(255,255,255,.1),transparent);transform:rotate(45deg);transition:.6s}
+.service-card:hover::before{left:100%}
+.service-card:hover{transform:scale(1.03)}
+.service-card .icon{font-size:2.4rem;margin-bottom:10px}
+.service-card h3{margin-bottom:8px;font-size:1.15rem}
+.service-card p{opacity:.93;font-size:.92rem}
+.btn{display:inline-block;background:var(--primary);color:#fff;border:none;padding:9px 18px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:500;transition:var(--tr);text-decoration:none;text-align:center}
+.btn:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-whatsapp{background:#25D366;width:100%;margin-top:10px}
+.btn-whatsapp:hover{background:#1da851}
+.btn-outline{background:transparent;border:1.5px solid var(--primary);color:var(--primary)}
+.btn-outline:hover{background:var(--primary);color:#fff}
+.btn-purple{background:#7b1fa2}
+.btn-purple:hover{background:#6a1b9a}
+select,input,textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.95rem;background:#fff;transition:border-color .2s}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--primary)}
+#tempChart{width:100%;height:260px;background:#fafafa;border-radius:12px;margin-bottom:12px}
+#map{height:320px;border-radius:12px;z-index:1;border:2px solid #c8e6c9}
+.map-controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.map-controls button{padding:6px 12px;font-size:.85rem;border-radius:8px}
+.chat-box{height:360px;overflow-y:auto;border:1.5px solid var(--border);border-radius:12px;padding:14px;background:#fafafa;margin-bottom:12px}
+.msg{max-width:85%;padding:11px 15px;border-radius:14px;margin-bottom:10px;font-size:.92rem;line-height:1.65;animation:fadeInUp .3s ease}
+.msg.user{background:#e3f2fd;margin-right:auto}
+.msg.bot{background:#f3e5f5;margin-left:auto}
+.msg .engine-tag{font-size:.75rem;opacity:.7;margin-bottom:4px}
+.page{display:none}
+.page.active{display:block;animation:fadeInUp .4s ease}
+footer{text-align:center;padding:24px 16px;color:var(--muted);font-size:.9rem;border-top:1px solid var(--border);margin-top:24px}
+footer a{color:#25D366;font-weight:600;text-decoration:none}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:center}
+th{background:#f1f8e9;font-weight:600}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;justify-content:center;align-items:center;z-index:2000;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:18px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;animation:fadeInUp .3s ease}
+.modal h3{margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;margin-bottom:5px;font-weight:500;font-size:.9rem}
+.settings-badge{position:fixed;bottom:20px;left:20px;width:48px;height:48px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 15px rgba(46,125,50,.4);z-index:900;transition:var(--tr)}
+.settings-badge:hover{transform:scale(1.1)}
+.loading-dots::after{content:'';animation:dots 1.2s steps(4,end) infinite}
+@keyframes dots{0%,20%{content:''}40%{content:'.'}60%{content:'..'}80%,100%{content:'...'}}
+</style>
+</head><body>
+<header>
+<div class="logo"><span>🌾</span><span>دفتر فنی ماهور — بابامنیر</span></div>
+<div class="nav-buttons">
+<button class="nav-btn active" onclick="showPage('home')">خانه</button>
+<button class="nav-btn" onclick="showPage('chat')">چت هوشمند</button>
+<button class="nav-btn" onclick="showPage('services')">خدمات</button>
+<button class="nav-btn" onclick="showPage('map')">نقشه ماهواره‌ای</button>
+</div>
+</header>
+<div class="container">
+<!-- HOME -->
+<div id="page-home" class="page active">
+<div class="grid">
+<div>
+<div class="card" style="animation-delay:.05s"><div class="card-title">📢 تبلیغات</div>
+<div id="adBox" class="ad-card" onclick="openAdDetail()"></div>
+<button class="btn btn-outline" style="width:100%;margin-top:10px" onclick="openAdModal()">➕ افزودن / ویرایش تبلیغ</button></div>
+<div class="card" style="animation-delay:.1s"><div class="card-title">👨‍🌾 تجربیات کشاورزان</div><div id="expBox" class="exp-card"></div></div>
+<a href="https://chat.whatsapp.com/BqiYo556JmYJWjJJgyXXgo?s=cl&p=a&iam=2" target="_blank" class="btn btn-whatsapp">💬 عضویت در گروه واتساپ</a>
+</div>
+<div>
+<div class="card" style="animation-delay:.05s">
+<div class="card-title">🌤️ هواشناسی منطقه</div>
+<select id="locationSelect" onchange="loadWeather()">
+<option value="mahoor">ماهور میلاتی</option>
+<option value="noorabad">نورآباد ممسنی</option>
+<option value="babamenir">بابامنیر</option>
+<option value="fars">فارس (مرکز)</option>
+</select>
+<div id="weatherStrip" class="weather-strip">در حال دریافت اطلاعات...</div>
+<div class="metrics">
+<div class="metric"><div class="value" id="mTemp">—</div><div class="label">دمای فعلی</div></div>
+<div class="metric"><div class="value" id="mMinMax">—</div><div class="label">حداقل / حداکثر</div></div>
+<div class="metric"><div class="value" id="mPrecip">—</div><div class="label">احتمال بارش</div></div>
+<div class="metric"><div class="value" id="mHumidity">—</div><div class="label">رطوبت</div></div>
+</div>
+<canvas id="tempChart"></canvas>
+<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:500">جدول پیش‌بینی ۱۰ روزه</summary>
+<div style="overflow-x:auto;margin-top:10px"><table id="forecastTable"><thead><tr><th>تاریخ</th><th>حداقل</th><th>حداکثر</th><th>احتمال بارش</th><th>بارش (mm)</th></tr></thead><tbody></tbody></table></div>
+</details>
+</div>
+<div class="card" style="animation-delay:.15s"><div class="card-title">🛠️ خدمات دفتر فنی ماهور</div>
+<div id="serviceBox" class="service-card" onclick="showPage('services')"></div></div>
+</div>
+<div>
+<div class="card" style="animation-delay:.05s"><div class="card-title">🔔 نکات روز</div>
+<div class="tip-card"><ul>
+<li>قبل از سم‌پاشی سرعت باد و احتمال بارش را بررسی کنید.</li>
+<li>آبیاری در ساعات خنک روز راندمان بالاتری دارد.</li>
+<li>بذر گواهی‌شده درصد سبز شدن را به‌طور قابل توجهی بالا می‌برد.</li>
+<li>آزمایش خاک قبل از کشت، مصرف کود را بهینه می‌کند.</li>
+</ul></div></div>
+<div class="card" style="animation-delay:.1s"><div class="card-title">🗺️ دسترسی سریع نقشه</div>
+<p style="font-size:.9rem;color:var(--muted);margin-bottom:10px">نقشه ماهواره‌ای و لایه‌های تحلیلی منطقه را ببینید.</p>
+<button class="btn" style="width:100%" onclick="showPage('map')">باز کردن نقشه ماهواره‌ای</button></div>
+<a href="https://chat.whatsapp.com/BqiYo556JmYJWjJJgyXXgo?s=cl&p=a&iam=2" target="_blank" class="btn btn-whatsapp">💬 گروه واتساپ</a>
+</div>
+</div>
+</div>
+<!-- CHAT -->
+<div id="page-chat" class="page">
+<div class="card" style="max-width:820px;margin:0 auto">
+<div class="card-title">🤖 مشاور هوشمند کشاورزی (Grok + ChatGPT)</div>
+<p style="font-size:.9rem;color:var(--muted);margin-bottom:12px">ابتدا از دکمه ⚙️ پایین صفحه کلیدهای API را وارد کنید. سپس سوال بپرسید.</p>
+<div class="chat-box" id="chatBox"></div>
+<textarea id="chatInput" rows="3" placeholder="سوال خود را بنویسید... مثال: بهترین زمان سم‌پاشی گندم در ماهور؟"></textarea>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+<button class="btn" style="flex:1" onclick="sendChat('grok')">🚀 ارسال با Grok</button>
+<button class="btn btn-purple" style="flex:1" onclick="sendChat('gpt')">🤖 ارسال با ChatGPT</button>
+</div>
+<button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="showPage('home')">← بازگشت به خانه</button>
+</div>
+</div>
+<!-- SERVICES -->
+<div id="page-services" class="page">
+<div class="card" style="max-width:900px;margin:0 auto">
+<div class="card-title">🛠️ خدمات دفتر فنی و مهندسی کشاورزی ماهور</div>
+<div id="servicesList"></div>
+<div style="text-align:center;margin-top:24px">
+<a href="https://chat.whatsapp.com/BqiYo556JmYJWjJJgyXXgo?s=cl&p=a&iam=2" target="_blank" class="btn btn-whatsapp" style="display:inline-block;width:auto;padding:12px 28px">💬 درخواست مشاوره از طریق گروه واتساپ</a>
+</div>
+<button class="btn btn-outline" style="width:100%;margin-top:16px" onclick="showPage('home')">← بازگشت به خانه</button>
+</div>
+</div>
+<!-- MAP -->
+<div id="page-map" class="page">
+<div class="card">
+<div class="card-title">🛰️ نقشه ماهواره‌ای و تحلیلی منطقه</div>
+<div class="map-controls">
+<button class="btn btn-outline" onclick="setMapLayer('street')">نقشه خیابانی</button>
+<button class="btn btn-outline" onclick="setMapLayer('satellite')">تصویر ماهواره‌ای</button>
+<button class="btn btn-outline" onclick="setMapLayer('hybrid')">ترکیبی</button>
+<button class="btn" onclick="flyToLocation()">رفتن به منطقه انتخاب‌شده</button>
+</div>
+<div id="map"></div>
+<p style="font-size:.85rem;color:var(--muted);margin-top:10px">لایه ماهواره‌ای از Esri World Imagery (رایگان برای استفاده غیرتجاری).</p>
+<button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="showPage('home')">← بازگشت به خانه</button>
+</div>
+</div>
+</div>
+<footer>
+🌱 دفتر فنی و خدمات کشاورزی ماهور — بابامنیر<br>
+مشاوره تخصصی | افزایش راندمان | خدمات فنی<br>
+<a href="https://chat.whatsapp.com/BqiYo556JmYJWjJJgyXXgo?s=cl&p=a&iam=2" target="_blank">عضویت در گروه واتساپ</a>
+</footer>
+<div class="settings-badge" onclick="openSettings()" title="تنظیمات API">⚙️</div><!-- Ad Modal -->
+<div class="modal-overlay" id="adModal"><div class="modal">
+<h3>➕ افزودن تبلیغ جدید</h3>
+<div class="form-group"><label>عنوان</label><input type="text" id="adTitle" placeholder="عنوان تبلیغ"></div>
+<div class="form-group"><label>توضیحات</label><textarea id="adDesc" rows="3"></textarea></div>
+<div class="form-group"><label>لینک</label><input type="text" id="adLink" value="#"></div>
+<div style="display:flex;gap:10px;margin-top:16px">
+<button class="btn" style="flex:1" onclick="saveAd()">ذخیره</button>
+<button class="btn btn-outline" style="flex:1" onclick="closeAdModal()">انصراف</button>
+</div></div></div>
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal"><div class="modal">
+<h3>⚙️ تنظیمات اتصال هوش مصنوعی</h3>
+<p style="font-size:.85rem;color:#c62828;margin-bottom:14px;background:#ffebee;padding:10px;border-radius:8px">⚠️ کلیدهای API فقط در مرورگر شما ذخیره می‌شوند. هرگز آن‌ها را عمومی نکنید.</p>
+<div class="form-group"><label>کلید xAI (Grok)</label><input type="password" id="grokKey" placeholder="xai-..."></div>
+<div class="form-group"><label>کلید OpenAI (ChatGPT)</label><input type="password" id="openaiKey" placeholder="sk-..."></div>
+<div class="form-group"><label>مدل Grok</label>
+<select id="grokModel">
+<option value="grok-3-mini">grok-3-mini (سریع)</option>
+<option value="grok-3">grok-3</option>
+<option value="grok-4-1-fast-reasoning" selected>grok-4-1-fast-reasoning</option>
+</select></div>
+<div class="form-group"><label>مدل ChatGPT</label>
+<select id="gptModel">
+<option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+<option value="gpt-4o">gpt-4o</option>
+<option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+</select></div>
+<div style="display:flex;gap:10px;margin-top:16px">
+<button class="btn" style="flex:1" onclick="saveSettings()">ذخیره تنظیمات</button>
+<button class="btn btn-outline" style="flex:1" onclick="closeSettings()">بستن</button>
+</div></div></div>
+<script>
+const LOCATIONS={mahoor:{name:"ماهور میلاتی",lat:29.95,lon:51.45},noorabad:{name:"نورآباد ممسنی",lat:30.11,lon:51.52},babamenir:{name:"بابامنیر",lat:30.07,lon:51.52},fars:{name:"فارس (مرکز)",lat:29.59,lon:52.58}};
+let ads=JSON.parse(localStorage.getItem("babamenir_ads"))||[{title:"بذر گندم گواهی‌شده",desc:"موجودی محدود - تحویل فوری در منطقه",link:"#"},{title:"کود کامل مخصوص دیم",desc:"افزایش راندمان با مصرف اصولی",link:"#"},{title:"خدمات سم‌پاشی تخصصی",desc:"با تجهیزات روز و کارشناس مجرب",link:"#"},{title:"تعمیرات تراکتور و ادوات",desc:"سرویس سیار در محل مزرعه",link:"#"}];
+const experiences=[{name:"کشاورز نمونه - منطقه ماهور",text:"با رعایت برنامه تغذیه خاک و زمان‌بندی آبیاری پیشنهادی کارشناسان، برداشت گندم دیم من بیش از ۲۲ درصد نسبت به سال قبل افزایش یافت."},{name:"تجربه کشت جو - نورآباد",text:"استفاده از بذر گواهی‌شده + آزمایش خاک قبل از کشت باعث شد تراکم بوته مناسب و عملکرد نهایی حدود ۲۵ درصد بهتر شود."},{name:"مبارزه به‌موقع با آفات",text:"تشخیص زودهنگام و سم‌پاشی در زمان طلایی، خسارت سن گندم را به حداقل رساند و کیفیت محصول را حفظ کرد."},{name:"مدیریت آبیاری در سال کم‌بارش",text:"با برنامه‌ریزی دقیق بر اساس پیش‌بینی هوا و رطوبت خاک، حتی در سال خشک هم راندمان قابل قبولی گرفتم."}];
+const services=[{title:"مشاوره کشاورزی و افزایش راندمان",desc:"برنامه اختصاصی برای افزایش حداقل ۲۰٪ عملکرد محصول",bg:"linear-gradient(135deg,#2e7d32,#66bb6a)",icon:"🌾"},{title:"مبارزه تخصصی با آفات و بیماری‌ها",desc:"تشخیص + توصیه‌نامه سموم و زمان‌بندی دقیق",bg:"linear-gradient(135deg,#c62828,#ef5350)",icon:"🐛"},{title:"پیگیری صدور سند زمین",desc:"همراهی کامل از تشکیل پرونده تا دریافت سند",bg:"linear-gradient(135deg,#1565c0,#42a5f5)",icon:"📜"},{title:"آزمایش خاک و برنامه تغذیه",desc:"تفسیر نتایج + توصیه کودی دقیق بر اساس نیاز زمین",bg:"linear-gradient(135deg,#6d4c41,#a1887f)",icon:"🧪"},{title:"خدمات دیجیتال و تعمیرات موبایل",desc:"رفع مشکلات نرم‌افزاری + تعمیرات موبایل (رایگان برای کشاورزان عضو)",bg:"linear-gradient(135deg,#6a1b9a,#ab47bc)",icon:"📱"}];
+let adIndex=0,expIndex=0,serviceIndex=0,map=null,currentTileLayer=null,streetLayer,satelliteLayer,hybridLayer;
+function openSettings(){document.getElementById('grokKey').value=localStorage.getItem('XAI_API_KEY')||'';document.getElementById('openaiKey').value=localStorage.getItem('OPENAI_API_KEY')||'';document.getElementById('grokModel').value=localStorage.getItem('GROK_MODEL')||'grok-4-1-fast-reasoning';document.getElementById('gptModel').value=localStorage.getItem('GPT_MODEL')||'gpt-4o-mini';document.getElementById('settingsModal').classList.add('show')}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('show')}
+function saveSettings(){localStorage.setItem('XAI_API_KEY',document.getElementById('grokKey').value.trim());localStorage.setItem('OPENAI_API_KEY',document.getElementById('openaiKey').value.trim());localStorage.setItem('GROK_MODEL',document.getElementById('grokModel').value);localStorage.setItem('GPT_MODEL',document.getElementById('gptModel').value);closeSettings();alert('تنظیمات ذخیره شد.')}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));const m={home:0,chat:1,services:2,map:3};const btns=document.querySelectorAll('.nav-btn');if(m[id]!==undefined)btns[m[id]].classList.add('active');if(id==='services')renderServicesList();if(id==='map')setTimeout(initMap,100);if(id==='chat')document.getElementById('chatInput').focus()}
+function weatherCodeInfo(code){const m={0:["صاف و آفتابی","#FFD54F","#5D4037"],1:["عمدتاً صاف","#FFE082","#5D4037"],2:["نیمه‌ابری","#B0BEC5","#263238"],3:["ابری","#90A4AE","#FFFFFF"],45:["مه","#CFD8DC","#37474F"],51:["باران ریز","#4FC3F7","#01579B"],61:["باران سبک","#29B6F6","#01579B"],63:["باران متوسط","#0288D1","#FFFFFF"],65:["باران شدید","#01579B","#FFFFFF"],80:["رگبار","#0277BD","#FFFFFF"],95:["رعد و برق","#5C6BC0","#FFFFFF"]};return m[code]||["نامشخص","#E0E0E0","#212121"]}
+async function loadWeather(){const key=document.getElementById('locationSelect').value;const loc=LOCATIONS[key];const strip=document.getElementById('weatherStrip');strip.textContent="در حال دریافت اطلاعات...";strip.style.background="#e0e0e0";strip.style.color="#333";try{const url=`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,weather_code&timezone=Asia/Tehran&forecast_days=10`;const res=await fetch(url);const data=await res.json();const c=data.current,d=data.daily;const[status,bg,color]=weatherCodeInfo(c.weather_code);strip.style.background=bg;strip.style.color=color;strip.innerHTML=`وضعیت فعلی: <b>${status}</b> | دما: ${c.temperature_2m.toFixed(1)}°C | رطوبت: ${c.relative_humidity_2m}% | باد: ${c.wind_speed_10m} km/h`;document.getElementById('mTemp').textContent=c.temperature_2m.toFixed(1)+"°C";document.getElementById('mMinMax').textContent=d.temperature_2m_min[0].toFixed(0)+" / "+d.temperature_2m_max[0].toFixed(0)+"°C";document.getElementById('mPrecip').textContent=d.precipitation_probability_max[0]+"%";document.getElementById('mHumidity').textContent=c.relative_humidity_2m+"%";const tbody=document.querySelector('#forecastTable tbody');tbody.innerHTML='';for(let i=0;i<d.time.length;i++){tbody.innerHTML+=`<tr><td>${d.time[i]}</td><td>${d.temperature_2m_min[i].toFixed(1)}</td><td>${d.temperature_2m_max[i].toFixed(1)}</td><td>${d.precipitation_probability_max[i]}%</td><td>${d.precipitation_sum[i]}</td></tr>`}drawTempChart(d.time,d.temperature_2m_max,d.temperature_2m_min)}catch(e){strip.textContent="خطا در دریافت داده.";strip.style.background="#ffcdd2";strip.style.color="#b71c1c"}}
+function drawTempChart(labels,maxArr,minArr){const canvas=document.getElementById('tempChart');const ctx=canvas.getContext('2d');const dpr=window.devicePixelRatio||1;const rect=canvas.getBoundingClientRect();canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;ctx.scale(dpr,dpr);const w=rect.width,h=rect.height;const pad={t:22,r:16,b:36,l:40};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;ctx.clearRect(0,0,w,h);const vals=[...maxArr,...minArr];const minV=Math.min(...vals)-2,maxV=Math.max(...vals)+2,range=maxV-minV;ctx.strokeStyle="#e8e8e8";ctx.lineWidth=1;for(let i=0;i<=4;i++){const y=pad.t+(ch/4)*i;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke()}ctx.fillStyle="#757575";ctx.font="11px Vazirmatn,Tahoma";ctx.textAlign="left";for(let i=0;i<=4;i++){const val=maxV-(range/4)*i;ctx.fillText(val.toFixed(0)+"°",4,pad.t+(ch/4)*i+4)}ctx.textAlign="center";labels.forEach((lab,i)=>{const x=pad.l+(cw/(labels.length-1))*i;ctx.fillText(lab.slice(5),x,h-10)});function line(data,color){ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.beginPath();data.forEach((v,i)=>{const x=pad.l+(cw/(data.length-1))*i;const y=pad.t+ch-((v-minV)/range)*ch;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();ctx.fillStyle=color;data.forEach((v,i)=>{const x=pad.l+(cw/(data.length-1))*i;const y=pad.t+ch-((v-minV)/range)*ch;ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill()})}line(maxArr,"#e53935");line(minArr,"#1e88e5");ctx.fillStyle="#e53935";ctx.fillRect(pad.l,5,11,11);ctx.fillStyle="#333";ctx.font="12px Vazirmatn,Tahoma";ctx.textAlign="left";ctx.fillText("حداکثر",pad.l+15,14);ctx.fillStyle="#1e88e5";ctx.fillRect(pad.l+80,5,11,11);ctx.fillStyle="#333";ctx.fillText("حداقل",pad.l+95,14)}
+function renderAd(){if(!ads.length)return;const ad=ads[adIndex%ads.length];document.getElementById('adBox').innerHTML=`<h4>${ad.title}</h4><p>${ad.desc}</p><small style="color:#555">کلیک برای جزئیات</small>`}
+function renderExp(){const e=experiences[expIndex%experiences.length];document.getElementById('expBox').innerHTML=`<strong>${e.name}</strong><p>${e.text}</p>`}
+function renderService(){const s=services[serviceIndex%services.length];const box=document.getElementById('serviceBox');box.style.background=s.bg;box.innerHTML=`<div class="icon">${s.icon}</div><h3>${s.title}</h3><p>${s.desc}</p>`}
+function renderServicesList(){document.getElementById('servicesList').innerHTML=services.map(s=>`<div style="background:${s.bg};border-radius:14px;padding:20px;margin-bottom:14px;color:white"><h3 style="margin:0 0 8px">${s.icon} ${s.title}</h3><p style="margin:0;opacity:.95">${s.desc}</p></div>`).join('')}
+function openAdModal(){document.getElementById('adModal').classList.add('show')}
+function closeAdModal(){document.getElementById('adModal').classList.remove('show');document.getElementById('adTitle').value='';document.getElementById('adDesc').value='';document.getElementById('adLink').value='#'}
+function saveAd(){const title=document.getElementById('adTitle').value.trim();const desc=document.getElementById('adDesc').value.trim();const link=document.getElementById('adLink').value.trim()||'#';if(!title||!desc){alert('عنوان و توضیحات الزامی است.');return}ads.push({title,desc,link});localStorage.setItem('babamenir_ads',JSON.stringify(ads));closeAdModal();renderAd();alert('تبلیغ اضافه شد.')}
+function openAdDetail(){if(!ads.length)return;const ad=ads[adIndex%ads.length];alert(`${ad.title}\n\n${ad.desc}\n\nلینک: ${ad.link}`)}
+async function sendChat(engine){const input=document.getElementById('chatInput');const text=input.value.trim();if(!text)return;const box=document.getElementById('chatBox');const userDiv=document.createElement('div');userDiv.className='msg user';userDiv.innerHTML=`<b>شما:</b><br>${escapeHtml(text)}`;box.appendChild(userDiv);input.value='';box.scrollTop=box.scrollHeight;const botDiv=document.createElement('div');botDiv.className='msg bot';botDiv.innerHTML=`<div class="engine-tag">${engine==='grok'?'Grok':'ChatGPT'}</div><span class="loading-dots">در حال فکر کردن</span>`;box.appendChild(botDiv);box.scrollTop=box.scrollHeight;try{let reply=engine==='grok'?await callGrok(text):await callOpenAI(text);botDiv.innerHTML=`<div class="engine-tag">${engine==='grok'?'Grok (xAI)':'ChatGPT'}</div>${escapeHtml(reply).replace(/\n/g,'<br>')}`}catch(err){botDiv.innerHTML=`<div class="engine-tag">خطا</div>متأسفانه خطایی رخ داد:<br>${escapeHtml(err.message)}<br><br><small>کلید API را از دکمه ⚙️ بررسی کنید.</small>`}box.scrollTop=box.scrollHeight}
+function escapeHtml(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+async function callGrok(userMessage){const key=localStorage.getItem('XAI_API_KEY');if(!key)throw new Error('کلید Grok تنظیم نشده. از دکمه ⚙️ وارد کنید.');const model=localStorage.getItem('GROK_MODEL')||'grok-4-1-fast-reasoning';const systemPrompt='تو یک مشاور متخصص کشاورزی ایرانی هستی که به کشاورزان منطقه ماهور، نورآباد ممسنی و بابامنیر (استان فارس) کمک می‌کنی. پاسخ‌ها را به فارسی روان، عملی و کوتاه بده.';const res=await fetch('https://api.x.ai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},body:JSON.stringify({model,messages:[{role:'system',content:systemPrompt},{role:'user',content:userMessage}],temperature:0.7,max_tokens:800})});if(!res.ok){const errText=await res.text();throw new Error(`خطای Grok (${res.status}): ${errText.slice(0,200)}`)}const data=await res.json();return data.choices?.[0]?.message?.content||'پاسخی دریافت نشد.'}
+async function callOpenAI(userMessage){const key=localStorage.getItem('OPENAI_API_KEY');if(!key)throw new Error('کلید OpenAI تنظیم نشده. از دکمه ⚙️ وارد کنید.');const model=localStorage.getItem('GPT_MODEL')||'gpt-4o-mini';const systemPrompt='تو یک مشاور متخصص کشاورزی ایرانی هستی که به کشاورزان منطقه ماهور، نورآباد ممسنی و بابامنیر (استان فارس) کمک می‌کنی. پاسخ‌ها را به فارسی روان، عملی و کوتاه بده.';const res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},body:JSON.stringify({model,messages:[{role:'system',content:systemPrompt},{role:'user',content:userMessage}],temperature:0.7,max_tokens:800})});if(!res.ok){const errText=await res.text();throw new Error(`خطای OpenAI (${res.status}): ${errText.slice(0,200)}`)}const data=await res.json();return data.choices?.[0]?.message?.content||'پاسخی دریافت نشد.'}
+function initMap(){if(map){map.invalidateSize();return}const locKey=document.getElementById('locationSelect')?.value||'mahoor';const loc=LOCATIONS[locKey];map=L.map('map').setView([loc.lat,loc.lon],11);streetLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19});satelliteLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri',maxZoom:19});hybridLayer=L.layerGroup([L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19}),L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19})]);currentTileLayer=satelliteLayer;satelliteLayer.addTo(map);L.marker([loc.lat,loc.lon]).addTo(map).bindPopup(`<b>${loc.name}</b><br>منطقه تحت پوشش دفتر فنی ماهور`).openPopup()}
+function setMapLayer(type){if(!map)return;if(currentTileLayer)map.removeLayer(currentTileLayer);if(type==='street')currentTileLayer=streetLayer;else if(type==='satellite')currentTileLayer=satelliteLayer;else currentTileLayer=hybridLayer;currentTileLayer.addTo(map)}
+function flyToLocation(){if(!map)return;const key=document.getElementById('locationSelect')?.value||'mahoor';const loc=LOCATIONS[key];map.flyTo([loc.lat,loc.lon],12)}
+function init(){renderAd();renderExp();renderService();loadWeather();setInterval(()=>{adIndex=(adIndex+1)%Math.max(ads.length,1);expIndex=(expIndex+1)%experiences.length;serviceIndex=(serviceIndex+1)%services.length;renderAd();renderExp();renderService()},3000)}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
