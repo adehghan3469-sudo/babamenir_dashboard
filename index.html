@@ -1111,6 +1111,94 @@ async function loadWeatherFull() {
     document.getElementById("weatherFullCurrent").innerHTML = "<p style='color:#ff8a80'>خطا در دریافت داده هواشناسی</p>";
   }
 }
+  <!-- ========== بخش پرداخت خدمات + خیریه ========== -->
+<div class="card" style="margin-bottom:18px; border:1px solid rgba(149,213,178,0.3)">
+  <div class="card-title">💳 پرداخت هزینه خدمات دفتر</div>
+  <p style="font-size:0.9rem; color:var(--muted); margin-bottom:12px; line-height:1.7">
+    برای پرداخت هزینه مشاوره، آزمایش خاک، برنامه تغذیه و سایر خدمات می‌توانید به‌صورت <strong>کارت‌به‌کارت</strong> اقدام کنید.
+  </p>
+
+  <div style="background:rgba(0,0,0,0.3); border-radius:14px; padding:14px; text-align:center; border:1px dashed rgba(149,213,178,0.4)">
+    <div style="font-size:0.85rem; color:var(--muted); margin-bottom:6px">شماره کارت</div>
+    <div style="font-size:1.35rem; font-weight:800; letter-spacing:1.5px; direction:ltr; color:#fff" id="cardNumber">
+      6037-7016-5739-6138
+    </div>
+    <div style="margin-top:6px; font-size:0.9rem; color:var(--accent)">به نام: دهقان</div>
+    <button class="btn btn-outline" style="margin-top:12px; max-width:200px" onclick="copyCard()">
+      کپی شماره کارت
+    </button>
+  </div>
+  <p style="font-size:0.8rem; color:var(--muted); margin-top:10px; text-align:center">
+    پس از واریز، رسید را در تلگرام ارسال کنید تا خدمات فعال شود.
+  </p>
+</div>
+
+<!-- بخش خیریه -->
+<div class="card" style="margin-bottom:18px; border:2px solid rgba(244,162,97,0.45); background:linear-gradient(145deg, rgba(13,40,24,0.85), rgba(45,106,79,0.5))">
+  <div class="card-title" style="color:var(--gold)">🤍 کمک به ایتام و نیازمندان روستا</div>
+  
+  <!-- عکس -->
+  <div style="border-radius:14px; overflow:hidden; margin-bottom:14px; border:1px solid rgba(255,255,255,0.1)">
+    <img src="charity.jpg" alt="کمک به ایتام و نیازمندان" style="width:100%; display:block; max-height:320px; object-fit:cover">
+  </div>
+
+  <!-- جمله اثرگذار -->
+  <p style="font-size:1.05rem; font-weight:600; line-height:1.75; text-align:center; margin-bottom:14px; color:#f8f9fa">
+    «یک نان ساده از سفره تو، می‌تواند اشک یک کودک یتیم را به لبخند تبدیل کند.»
+  </p>
+
+  <p style="font-size:0.88rem; color:var(--muted); text-align:center; margin-bottom:16px; line-height:1.7">
+    تمام مبالغ دریافتی این بخش بدون کم‌وکاست صرف کمک به کودکان یتیم و خانواده‌های نیازمند منطقه می‌شود.
+  </p>
+
+  <!-- کارت -->
+  <div style="background:rgba(0,0,0,0.35); border-radius:14px; padding:14px; text-align:center; border:1px solid rgba(244,162,97,0.3)">
+    <div style="font-size:0.85rem; color:var(--muted); margin-bottom:6px">شماره کارت کمک‌های خیریه</div>
+    <div style="font-size:1.3rem; font-weight:800; letter-spacing:1.5px; direction:ltr; color:#fff">
+      6037-7016-5739-6138
+    </div>
+    <div style="margin-top:6px; font-size:0.9rem; color:var(--gold)">به نام: دهقان</div>
+    <button class="btn btn-gold" style="margin-top:12px; max-width:220px" onclick="copyCard()">
+      کپی شماره کارت برای کمک
+    </button>
+  </div>
+</div>
+
+<!-- شفافیت خرج‌کرد -->
+<div class="card" style="margin-bottom:18px">
+  <div class="card-title">📋 گزارش شفاف خرج‌کرد کمک‌ها</div>
+  <p style="font-size:0.88rem; color:var(--muted); margin-bottom:12px">
+    همه کمک‌های دریافتی به‌صورت عمومی ثبت و اعلام می‌شود تا اعتماد شما حفظ گردد.
+  </p>
+  
+  <div id="charityReport" style="font-size:0.9rem">
+    <!-- نمونه گزارش (می‌توانید بعداً دستی یا با JS به‌روز کنید) -->
+    <div style="background:rgba(0,0,0,0.25); border-radius:12px; padding:12px; margin-bottom:8px; border-right:3px solid var(--gold)">
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+        <strong>آبان ۱۴۰۴</strong>
+        <span style="color:var(--accent)">۴٬۲۰۰٬۰۰۰ تومان</span>
+      </div>
+      <div style="color:var(--muted); font-size:0.82rem">خرید لوازم‌التحریر و پوشاک برای ۱۲ کودک یتیم روستا</div>
+    </div>
+    <div style="background:rgba(0,0,0,0.25); border-radius:12px; padding:12px; margin-bottom:8px; border-right:3px solid var(--gold)">
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+        <strong>مهر ۱۴۰۴</strong>
+        <span style="color:var(--accent)">۳٬۱۵۰٬۰۰۰ تومان</span>
+      </div>
+      <div style="color:var(--muted); font-size:0.82rem">کمک هزینه درمان و خرید دارو برای ۳ خانواده نیازمند</div>
+    </div>
+    <div style="background:rgba(0,0,0,0.25); border-radius:12px; padding:12px; border-right:3px solid var(--gold)">
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+        <strong>شهریور ۱۴۰۴</strong>
+        <span style="color:var(--accent)">۲٬۸۰۰٬۰۰۰ تومان</span>
+      </div>
+      <div style="color:var(--muted); font-size:0.82rem">تهیه بسته‌های غذایی برای خانواده‌های کم‌برخوردار</div>
+    </div>
+  </div>
+  <p style="font-size:0.8rem; color:var(--muted); margin-top:12px; text-align:center">
+    گزارش کامل‌تر به‌زودی در این بخش به‌روزرسانی می‌شود.
+  </p>
+</div>
 
 function showWeatherTab(tab) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -1179,3 +1267,11 @@ setInterval(rotateBg, 12000);       // تغییر پس‌زمینه کشاورز
 </script>
 </body>
 </html>
+function copyCard() {
+  const card = "6037701657396138";
+  navigator.clipboard.writeText(card).then(() => {
+    alert("✅ شماره کارت کپی شد\n6037-7016-5739-6138\nبه نام: دهقان");
+  }).catch(() => {
+    prompt("شماره کارت را کپی کنید:", card);
+  });
+}
