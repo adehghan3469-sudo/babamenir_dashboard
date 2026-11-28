@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>دفتر فنی ماهور | بابامنیر — پلتفرم کشاورزی</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css"/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--primary:#1b5e20;--primary-light:#2e7d32;--gold:#f9a825;--bg:#0a1f0c;--card:rgba(255,255,255,0.92);--text:#1a211a;--muted:#5c6b5c}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;font-family:'Vazirmatn',Tahoma,sans-serif}
+body{background:#0a1f0c;color:var(--text);overflow-x:hidden;min-height:100vh}
+#bg-layer{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;will-change:transform,opacity}
+#bg-layer::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,30,12,0.5) 0%,rgba(10,30,12,0.78) 100%)}
+.particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.particle{position:absolute;width:4px;height:4px;background:rgba(255,255,255,0.35);border-radius:50%}
+.screen{display:none;position:relative;z-index:10;min-height:100vh}
+.screen.active{display:block}
+#landing{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:24px 16px 50px;text-align:center}
+#landing h1{color:#fff;font-size:clamp(1.5rem,4vw,2.3rem);margin:12px 0 6px;text-shadow:0 4px 18px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;gap:10px;opacity:0}
+#landing p.sub{color:rgba(255,255,255,.88);font-size:1rem;margin-bottom:22px;max-width:520px;opacity:0}
+.weather-hero{width:100%;max-width:420px;background:rgba(255,255,255,0.12);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,0.25);border-radius:28px;padding:22px 20px;margin-bottom:36px;box-shadow:0 20px 50px rgba(0,0,0,0.35);position:relative;overflow:hidden;transition:background .9s,border-color .9s;opacity:0;transform:translateY(40px)}
+.weather-hero.sunny{background:linear-gradient(145deg,rgba(255,236,179,0.3),rgba(255,193,7,0.18));border-color:rgba(255,193,7,0.5);box-shadow:0 20px 50px rgba(255,193,7,0.25)}
+.weather-hero.cloudy{background:linear-gradient(145deg,rgba(176,190,197,0.35),rgba(120,144,156,0.22));border-color:rgba(176,190,197,0.55)}
+.weather-hero.rainy{background:linear-gradient(145deg,rgba(66,165,245,0.3),rgba(25,118,210,0.22));border-color:rgba(66,165,245,0.55)}
+.weather-hero .loc{font-size:.95rem;color:rgba(255,255,255,0.9);margin-bottom:6px}
+.weather-hero .temp-big{font-size:3.5rem;font-weight:800;color:#fff;text-shadow:0 4px 14px rgba(0,0,0,0.35);line-height:1.1}
+.weather-hero .desc{font-size:1.12rem;color:rgba(255,255,255,0.95);font-weight:600;margin:4px 0 12px}
+.weather-hero .metrics{display:flex;justify-content:space-around;gap:8px;background:rgba(0,0,0,0.18);border-radius:16px;padding:11px 6px}
+.weather-hero .m-item{text-align:center;color:#fff}
+.weather-hero .m-item .v{font-size:1.15rem;font-weight:700}
+.weather-hero .m-item .l{font-size:.75rem;opacity:.85}
+.weather-icon-svg{width:64px;height:64px;margin:0 auto 8px;display:block}
+.rain-container{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:28px}
+.rain-drop{position:absolute;width:2px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,0.75));border-radius:1px}
+.wheat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:24px;max-width:980px;width:100%}
+.wheat-cluster{width:120px;height:170px;margin:0 auto;position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;opacity:0;transform:translateY(50px) scale(.8)}
+.wheat-svg{width:92px;height:110px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.4));overflow:visible}
+.wheat-cluster .label{margin-top:6px;color:#fff;font-weight:700;font-size:.9rem;text-shadow:0 2px 6px rgba(0,0,0,0.55);line-height:1.25}
+.wheat-cluster .tooltip{position:absolute;bottom:-60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#fff;font-size:.74rem;padding:7px 10px;border-radius:10px;width:170px;opacity:0;pointer-events:none;z-index:20}
+#register-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.reg-card{background:var(--card);border-radius:24px;padding:32px 28px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);opacity:0;transform:scale(.9)}
+.reg-card h2{color:var(--primary);margin-bottom:6px;font-size:1.4rem}
+.reg-card .hint{color:var(--muted);font-size:.9rem;margin-bottom:22px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.88rem;font-weight:600;margin-bottom:5px;color:var(--primary)}
+.form-group input,.form-group select{width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:12px;font-family:inherit;font-size:.95rem;transition:.25s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(27,94,32,.18)}
+.captcha-box{display:flex;align-items:center;gap:12px;margin:18px 0;background:#f5f5f5;padding:12px;border-radius:12px}
+#captcha-code{font-family:monospace;font-size:1.5rem;font-weight:800;letter-spacing:4px;background:#1b5e20;color:#fff;padding:8px 16px;border-radius:8px;user-select:none}
+.btn-main{width:100%;padding:14px;background:linear-gradient(135deg,#1b5e20,#2e7d32);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:1.05rem;font-weight:700;cursor:pointer;transition:.3s;margin-top:8px;position:relative;overflow:hidden}
+.btn-main:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(27,94,32,.4)}
+.btn-secondary{padding:10px 18px;border-radius:12px;border:none;background:#1565c0;color:#fff;font-family:inherit;font-size:.9rem;cursor:pointer;transition:.3s}
+.btn-secondary:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(21,101,192,.35)}
+.btn-danger{padding:10px 18px;border-radius:12px;border:none;background:#c62828;color:#fff;font-family:inherit;font-size:.9rem;cursor:pointer}
+.btn-success{padding:10px 18px;border-radius:12px;border:none;background:#2e7d32;color:#fff;font-family:inherit;font-size:.9rem;cursor:pointer}
+#dashboard{padding-bottom:100px}
+.top-bar{background:rgba(27,94,32,.93);backdrop-filter:blur(12px);color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.25);width:100%}
+.top-bar .user-info{font-size:.9rem;opacity:.9}
+.top-bar .nav-btns{display:flex;gap:6px;flex-wrap:wrap}
+.top-bar button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:7px 14px;border-radius:999px;font-family:inherit;font-size:.84rem;cursor:pointer;transition:.25s}
+.top-bar button:hover,.top-bar button.active{background:#fff;color:var(--primary)}
+.container{max-width:1200px;margin:0 auto;padding:20px 14px}
+.welcome-section{background:var(--card);border-radius:20px;padding:22px;margin-bottom:24px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
+.weather-current{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin:16px 0}
+.w-metric{background:linear-gradient(145deg,#e8f5e9,#f1f8e9);border-radius:14px;padding:14px 10px;text-align:center;border:1px solid #c8e6c9}
+.w-metric .val{font-size:1.4rem;font-weight:800;color:var(--primary)}
+.w-metric .lbl{font-size:.78rem;color:var(--muted);margin-top:2px}
+.section-title{color:#fff;font-size:1.25rem;font-weight:700;margin:28px 0 16px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+.spheres-row{display:flex;flex-wrap:wrap;gap:26px;justify-content:center;margin-bottom:22px;perspective:1000px}
+.sphere3d{width:130px;height:130px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:700;text-align:center;cursor:pointer;position:relative;box-shadow:inset -14px -14px 28px rgba(0,0,0,0.38),inset 12px 12px 22px rgba(255,255,255,0.28),0 16px 32px rgba(0,0,0,0.42);transform-style:preserve-3d}
+.sphere3d::before{content:'';position:absolute;top:13%;left:17%;width:34%;height:28%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.8),transparent 70%);border-radius:50%;pointer-events:none}
+.sphere3d .ico{font-size:1.95rem;margin-bottom:4px;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.35))}
+.sphere3d .txt{font-size:.87rem;line-height:1.25;padding:0 8px;text-shadow:0 1px 4px rgba(0,0,0,0.45)}
+.sphere3d.news{background:radial-gradient(circle at 35% 30%,#64b5f6,#1565c0 70%,#0d47a1)}
+.sphere3d.agri{background:radial-gradient(circle at 35% 30%,#81c784,#2e7d32 70%,#1b5e20)}
+.sphere3d.service{background:radial-gradient(circle at 35% 30%,#ffb74d,#e65100 70%,#bf360c)}
+.sphere3d.contact{background:radial-gradient(circle at 35% 30%,#ba68c8,#7b1fa2 70%,#4a148c)}
+.sphere3d.weather-w{background:radial-gradient(circle at 35% 30%,#4fc3f7,#0277bd 70%,#01579b)}
+.sphere3d.weather-m{background:radial-gradient(circle at 35% 30%,#4db6ac,#00695c 70%,#004d40)}
+.sphere3d.mapping{background:radial-gradient(circle at 35% 30%,#aed581,#558b2f 70%,#33691e)}
+.news-list,.agri-list{background:var(--card);border-radius:18px;padding:18px;margin-bottom:24px;box-shadow:0 6px 24px rgba(0,0,0,.1);max-height:380px;overflow-y:auto}
+.news-item{padding:13px 0;border-bottom:1px solid #eee;cursor:pointer;transition:all .3s}
+.news-item:last-child{border-bottom:none}
+.news-item:hover{background:linear-gradient(90deg,#f1f8e9,#e8f5e9);border-radius:12px;padding-right:12px}
+.news-item .title{font-weight:700;color:var(--primary);font-size:.98rem}
+.news-item .summary{font-size:.85rem;color:var(--muted);margin-top:3px}
+#map-section,#mapping-section{background:var(--card);border-radius:20px;padding:20px;margin-bottom:24px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
+#farm-map,#mapping-map{height:480px;border-radius:14px;z-index:1}
+.map-controls{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.map-controls button{padding:10px 16px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:.9rem;cursor:pointer;transition:all .3s}
+.map-controls button:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(27,94,32,0.35)}
+.farm-info,.mapping-info{background:#e8f5e9;border-radius:12px;padding:14px;margin-top:12px;font-size:.9rem;line-height:1.7}
+.office-info{background:linear-gradient(135deg,#1b5e20,#2e7d32);color:#fff;border-radius:18px;padding:20px;text-align:center;margin:24px 0;box-shadow:0 8px 28px rgba(27,94,32,.35)}
+.office-info a{color:#ffeb3b;text-decoration:none;font-weight:600}
+.office-info .links{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:12px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:20px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+.modal h3{color:var(--primary);margin-bottom:12px}
+.close-modal{float:left;background:#eee;border:none;width:34px;height:34px;border-radius:50%;font-size:1.25rem;cursor:pointer}
+.footer-fixed{position:fixed;bottom:0;left:0;right:0;z-index:90;background:rgba(10,30,12,.93);color:#fff;text-align:center;padding:10px;font-size:.8rem;backdrop-filter:blur(8px)}
+.logo-svg{width:32px;height:32px;vertical-align:middle;margin-left:6px}
+.reveal{opacity:0;transform:translateY(40px)}
+.reveal-scale{opacity:0;transform:scale(.6)}
+.land-card{background:#f1f8e9;border:1px solid #c8e6c9;border-radius:14px;padding:14px;margin-bottom:12px}
+.land-card h4{color:var(--primary);margin-bottom:6px}
+.land-card .coords{font-size:.82rem;color:var(--muted);max-height:100px;overflow-y:auto}
+.point-badge{display:inline-block;background:#1b5e20;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:.75rem;margin-left:4px}
+@media(max-width:600px){.wheat-cluster{width:110px;height:155px}.wheat-svg{width:82px;height:98px}.sphere3d{width:114px;height:114px}#farm-map,#mapping-map{height:360px}.weather-hero .temp-big{font-size:2.9rem}}
+
+/* ===== Micro-interactions ===== */
+.btn-ripple{position:relative;overflow:hidden}
+.btn-ripple .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.45);transform:scale(0);pointer-events:none;animation:ripple-anim .55s ease-out}
+@keyframes ripple-anim{to{transform:scale(4);opacity:0}}
+.magnetic{transition:transform .15s ease-out}
+.toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{background:rgba(27,94,32,.95);color:#fff;padding:14px 22px;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);font-size:.95rem;font-weight:600;display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(-20px) scale(.9);backdrop-filter:blur(10px);pointer-events:auto}
+.toast.error{background:rgba(198,40,40,.95)}
+.toast.info{background:rgba(21,101,192,.95)}
+.toast.success{background:rgba(46,125,50,.95)}
+.shimmer-box{position:relative;overflow:hidden}
+.shimmer-box::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:shimmer 1.4s infinite;transform:translateX(-100%)}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+.press-feedback:active{transform:scale(.94)!important}
+.land-card{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s}
+.land-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(0,0,0,.12)}
+.sphere3d{transition:box-shadow .3s}
+.sphere3d:hover{box-shadow:inset -14px -14px 28px rgba(0,0,0,.38),inset 12px 12px 22px rgba(255,255,255,.35),0 22px 40px rgba(0,0,0,.5)}
+.et-progress-bar{height:10px;background:#fff;border-radius:6px;overflow:hidden}
+.et-progress-fill{height:100%;border-radius:6px;transition:width 1.2s cubic-bezier(.34,1.2,.64,1)}
+#confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:10000;overflow:hidden}
+
+/* Animate.css helpers */
+.animate__animated{--animate-duration:0.75s}
+.animate__faster{--animate-duration:0.45s}
+.animate__slow{--animate-duration:1.1s}
+#register-panel.animate__animated,
+#landing.animate__animated{animation-fill-mode:both}
+
+</style>
+</head>
+<body>
+<div id="bg-layer"></div>
+<div class="particles" id="particles"></div>
+
+<div id="landing" class="screen active">
+  <h1 id="main-title">
+    <svg class="logo-svg" viewBox="0 0 64 64" width="40" height="40"><defs><linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD54F"/><stop offset="100%" stop-color="#FF8F00"/></linearGradient></defs>
+    <g class="wheat-stem" style="transform-origin:32px 56px"><path d="M32 58 V36" stroke="#8D6E63" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse class="grain" cx="32" cy="18" rx="5" ry="8" fill="url(#goldGrad)" transform="rotate(-10 32 18)"/><ellipse class="grain" cx="32" cy="18" rx="5" ry="8" fill="#FFB300" transform="rotate(10 32 18)"/>
+    <ellipse class="grain" cx="32" cy="26" rx="6" ry="9" fill="url(#goldGrad)" transform="rotate(-14 32 26)"/><ellipse class="grain" cx="32" cy="26" rx="6" ry="9" fill="#FFB300" transform="rotate(14 32 26)"/>
+    <ellipse class="grain" cx="32" cy="34" rx="5" ry="8" fill="url(#goldGrad)" transform="rotate(-6 32 34)"/><ellipse class="grain" cx="32" cy="34" rx="5" ry="8" fill="#FFB300" transform="rotate(6 32 34)"/>
+    <circle class="grain-glow" cx="32" cy="14" r="3" fill="#FFF59D" opacity="0.5"/></g></svg>
+    دفتر فنی مهندسی کشاورزی ماهور
+  </h1>
+  <p class="sub" id="main-sub">پلتفرم تخصصی کشاورزان بابامنیر، ماهور میلاتی و نورآباد ممسنی<br>زیر نظر مهندس افشین دهقان</p>
+  <div class="weather-hero animate__animated animate__fadeIn animate__slow" id="hero-weather" data-aos="fade-in" data-aos-duration="1000">
+    <div class="rain-container" id="rain-layer"></div>
+    <div id="weather-icon-container" style="height:64px;margin-bottom:4px"></div>
+    <div class="loc">📍 نورآباد ممسنی / بابامنیر</div>
+    <div class="temp-big" id="hero-temp">—°</div>
+    <div class="desc" id="hero-desc">در حال دریافت...</div>
+    <div class="metrics">
+      <div class="m-item"><div class="v" id="hero-hum">—</div><div class="l">رطوبت</div></div>
+      <div class="m-item"><div class="v" id="hero-rain">—</div><div class="l">احتمال بارش</div></div>
+      <div class="m-item"><div class="v" id="hero-wind">—</div><div class="l">باد</div></div>
+    </div>
+  </div>
+  <div class="wheat-grid" id="wheat-grid">
+    <div class="wheat-cluster" data-section="news"><svg class="wheat-svg" viewBox="0 0 64 80"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD54F"/><stop offset="100%" stop-color="#FF8F00"/></linearGradient></defs><g class="wheat-stem"><path d="M32 74 V46" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-9 32 20)"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="#FFB300" transform="rotate(9 32 20)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="url(#g1)" transform="rotate(-13 32 29)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="#FFB300" transform="rotate(13 32 29)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-7 32 38)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="#FFB300" transform="rotate(7 32 38)"/><ellipse class="grain" cx="32" cy="15" rx="4.5" ry="7" fill="#FFE082"/><circle class="grain-glow" cx="32" cy="12" r="3.5" fill="#FFF59D"/></g></svg><div class="label">اخبار<br>کشور</div><div class="tooltip">اخبار سیاسی، فرهنگی، اجتماعی و اقتصادی</div></div>
+    <div class="wheat-cluster" data-section="agri"><svg class="wheat-svg" viewBox="0 0 64 80"><defs><linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD54F"/><stop offset="100%" stop-color="#F57C00"/></linearGradient></defs><g class="wheat-stem"><path d="M32 74 V46" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-9 32 20)"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="#FFB300" transform="rotate(9 32 20)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="url(#g1)" transform="rotate(-13 32 29)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="#FFB300" transform="rotate(13 32 29)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-7 32 38)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="#FFB300" transform="rotate(7 32 38)"/><ellipse class="grain" cx="32" cy="15" rx="4.5" ry="7" fill="#FFE082"/><circle class="grain-glow" cx="32" cy="12" r="3.5" fill="#FFF59D"/></g></svg><div class="label">اخبار<br>کشاورزی</div><div class="tooltip">کمیسیون‌ها، جهاد کشاورزی و کشت دیم</div></div>
+    <div class="wheat-cluster" data-section="services"><svg class="wheat-svg" viewBox="0 0 64 80"><defs><linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE082"/><stop offset="100%" stop-color="#FF6F00"/></linearGradient></defs><g class="wheat-stem"><path d="M32 74 V46" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-9 32 20)"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="#FFB300" transform="rotate(9 32 20)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="url(#g1)" transform="rotate(-13 32 29)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="#FFB300" transform="rotate(13 32 29)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-7 32 38)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="#FFB300" transform="rotate(7 32 38)"/><ellipse class="grain" cx="32" cy="15" rx="4.5" ry="7" fill="#FFE082"/><circle class="grain-glow" cx="32" cy="12" r="3.5" fill="#FFF59D"/></g></svg><div class="label">خدمات<br>دفتر</div><div class="tooltip">خدمات فنی + تعمیر رایگان موبایل</div></div>
+    <div class="wheat-cluster" data-section="farm"><svg class="wheat-svg" viewBox="0 0 64 80"><defs><linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD54F"/><stop offset="100%" stop-color="#EF6C00"/></linearGradient></defs><g class="wheat-stem"><path d="M32 74 V46" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-9 32 20)"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="#FFB300" transform="rotate(9 32 20)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="url(#g1)" transform="rotate(-13 32 29)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="#FFB300" transform="rotate(13 32 29)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-7 32 38)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="#FFB300" transform="rotate(7 32 38)"/><ellipse class="grain" cx="32" cy="15" rx="4.5" ry="7" fill="#FFE082"/><circle class="grain-glow" cx="32" cy="12" r="3.5" fill="#FFF59D"/></g></svg><div class="label">مزرعه<br>من</div><div class="tooltip">ترسیم حدود + پایش با نقشه و Google Earth</div></div>
+    <div class="wheat-cluster" data-section="mapping"><svg class="wheat-svg" viewBox="0 0 64 80"><defs><linearGradient id="g7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#AED581"/><stop offset="100%" stop-color="#558B2F"/></linearGradient></defs><g class="wheat-stem"><path d="M32 74 V46" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="url(#g7)" transform="rotate(-9 32 20)"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="#8BC34A" transform="rotate(9 32 20)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="url(#g7)" transform="rotate(-13 32 29)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="#8BC34A" transform="rotate(13 32 29)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="url(#g7)" transform="rotate(-7 32 38)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="#8BC34A" transform="rotate(7 32 38)"/><ellipse class="grain" cx="32" cy="15" rx="4.5" ry="7" fill="#C5E1A5"/><circle class="grain-glow" cx="32" cy="12" r="3.5" fill="#DCEDC8"/></g></svg><div class="label">ترسیم<br>نقشه زمین</div><div class="tooltip">نقطه‌گذاری حدود زمین + دانلود PDF</div></div>
+    <div class="wheat-cluster" data-section="weather"><svg class="wheat-svg" viewBox="0 0 64 80"><defs><linearGradient id="g5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE082"/><stop offset="100%" stop-color="#FF8F00"/></linearGradient></defs><g class="wheat-stem"><path d="M32 74 V46" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-9 32 20)"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="#FFB300" transform="rotate(9 32 20)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="url(#g1)" transform="rotate(-13 32 29)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="#FFB300" transform="rotate(13 32 29)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-7 32 38)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="#FFB300" transform="rotate(7 32 38)"/><ellipse class="grain" cx="32" cy="15" rx="4.5" ry="7" fill="#FFE082"/><circle class="grain-glow" cx="32" cy="12" r="3.5" fill="#FFF59D"/></g></svg><div class="label">آب و<br>هوا</div><div class="tooltip">هفتگی و ماهانه</div></div>
+    <div class="wheat-cluster" data-section="contact"><svg class="wheat-svg" viewBox="0 0 64 80"><defs><linearGradient id="g6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD54F"/><stop offset="100%" stop-color="#E65100"/></linearGradient></defs><g class="wheat-stem"><path d="M32 74 V46" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-9 32 20)"/><ellipse class="grain" cx="32" cy="20" rx="6.5" ry="10" fill="#FFB300" transform="rotate(9 32 20)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="url(#g1)" transform="rotate(-13 32 29)"/><ellipse class="grain" cx="32" cy="29" rx="7.5" ry="11" fill="#FFB300" transform="rotate(13 32 29)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="url(#g1)" transform="rotate(-7 32 38)"/><ellipse class="grain" cx="32" cy="38" rx="6.5" ry="10" fill="#FFB300" transform="rotate(7 32 38)"/><ellipse class="grain" cx="32" cy="15" rx="4.5" ry="7" fill="#FFE082"/><circle class="grain-glow" cx="32" cy="12" r="3.5" fill="#FFF59D"/></g></svg><div class="label">ارتباط<br>مستقیم</div><div class="tooltip">ایمیل‌ها و واتساپ ریاست دفتر</div></div>
+  </div>
+</div>
+
+<div id="register-screen" class="screen">
+  <div class="reg-card" id="reg-card">
+    <h2>ثبت‌نام کشاورز</h2>
+    <p class="hint">برای ورود به سامانه مشخصات زیر را وارد کنید. اطلاعات آرشیو می‌شود.</p>
+    <div class="form-group"><label>نام</label><input type="text" id="reg-name" placeholder="نام"></div>
+    <div class="form-group"><label>نام خانوادگی</label><input type="text" id="reg-family" placeholder="نام خانوادگی"></div>
+    <div class="form-group"><label>روستا / محل کشت</label><input type="text" id="reg-village" placeholder="مثال: بابامنیر، ماهور میلاتی"></div>
+    <div class="form-group"><label>ایمیل</label><input type="email" id="reg-email" placeholder="example@gmail.com"></div>
+    <div class="form-group"><label>شماره تلفن</label><input type="tel" id="reg-phone" placeholder="09xxxxxxxxx"></div>
+    <div class="captcha-box"><div id="captcha-code">A7K9</div><input type="text" id="captcha-input" placeholder="کد را وارد کنید" style="flex:1;margin:0"><button type="button" onclick="refreshCaptcha()" style="background:#eee;border:none;padding:8px 12px;border-radius:8px;cursor:pointer">↻</button></div>
+    <button class="btn-main animate__animated animate__pulse animate__infinite animate__slower" id="btn-register" onclick="this.classList.remove('animate__pulse','animate__infinite');completeRegister()">ورود به سامانه</button>
+    <p id="reg-error" style="color:#c62828;font-size:.85rem;margin-top:10px;text-align:center"></p>
+  </div>
+</div>
+
+<div id="dashboard" class="screen">
+  <div class="top-bar" id="top-bar">
+    <div class="logo" style="display:flex;align-items:center;gap:6px">
+      <svg class="logo-svg" viewBox="0 0 64 64" width="28" height="28"><g class="wheat-stem" style="transform-origin:32px 56px"><path d="M32 58 V36" stroke="#FFD54F" stroke-width="2.5" stroke-linecap="round"/><ellipse class="grain" cx="32" cy="18" rx="5" ry="8" fill="#FFD54F" transform="rotate(-10 32 18)"/><ellipse class="grain" cx="32" cy="18" rx="5" ry="8" fill="#FFB300" transform="rotate(10 32 18)"/><ellipse class="grain" cx="32" cy="26" rx="6" ry="9" fill="#FFD54F" transform="rotate(-14 32 26)"/><ellipse class="grain" cx="32" cy="26" rx="6" ry="9" fill="#FFB300" transform="rotate(14 32 26)"/><ellipse class="grain" cx="32" cy="34" rx="5" ry="8" fill="#FFD54F" transform="rotate(-6 32 34)"/><ellipse class="grain" cx="32" cy="34" rx="5" ry="8" fill="#FFB300" transform="rotate(6 32 34)"/></g></svg>
+      دفتر فنی ماهور
+    </div>
+    <div class="user-info" id="user-display">—</div>
+    <div class="nav-btns">
+      <button class="active" onclick="showSection('home')">خانه</button>
+      <button onclick="showSection('news')">اخبار</button>
+      <button onclick="showSection('agri')">کشاورزی</button>
+      <button onclick="showSection('services')">خدمات</button>
+      <button onclick="showSection('farm')">مزرعه من</button>
+      <button onclick="showSection('mapping')">ترسیم نقشه</button>
+      <button onclick="showSection('weather')">آب‌وهوا</button>
+      <button onclick="logout()">خروج</button>
+    </div>
+  </div>
+  <div class="container">
+    <div id="sec-home" data-aos="fade-up" class="content-sec">
+      <div class="welcome-section reveal animate__animated animate__fadeIn" id="welcome-sec" data-aos="fade-up">
+        <h2 style="color:var(--primary);margin-bottom:6px">سلام <span id="welcome-name">کشاورز</span> عزیز 👋</h2>
+        <p style="color:var(--muted);font-size:.95rem">وضعیت فعلی آب و هوا و خدمات دفتر فنی ماهور</p>
+        <div class="weather-current">
+          <div class="w-metric"><div class="val" id="cw-temp">—</div><div class="lbl">دما (°C)</div></div>
+          <div class="w-metric"><div class="val" id="cw-hum">—</div><div class="lbl">رطوبت</div></div>
+          <div class="w-metric"><div class="val" id="cw-rain">—</div><div class="lbl">احتمال بارش</div></div>
+          <div class="w-metric"><div class="val" id="cw-wind">—</div><div class="lbl">باد (km/h)</div></div>
+        </div>
+        <div id="weather-desc" style="text-align:center;font-weight:600;color:var(--primary);margin-top:8px"></div>
+      </div>
+      <div data-aos="fade-down" class="section-title reveal animate__animated animate__fadeInDown" id="sec-title-home">🌾 بخش‌های اصلی</div>
+      <div class="spheres-row" id="home-spheres">
+        <div data-aos="zoom-in" data-aos-delay="80" class="sphere3d news reveal-scale" onclick="showSection('news')"><div class="ico">📰</div><div class="txt">اخبار<br>کشور</div></div>
+        <div data-aos="zoom-in" data-aos-delay="160" class="sphere3d agri reveal-scale" onclick="showSection('agri')"><div class="ico">🌾</div><div class="txt">اخبار<br>کشاورزی</div></div>
+        <div data-aos="zoom-in" data-aos-delay="240" class="sphere3d service reveal-scale" onclick="showSection('services')"><div class="ico">🛠️</div><div class="txt">خدمات<br>دفتر</div></div>
+        <div data-aos="zoom-in" data-aos-delay="320" class="sphere3d contact reveal-scale" onclick="showSection('contact')"><div class="ico">📞</div><div class="txt">ارتباط<br>مستقیم</div></div>
+        <div data-aos="zoom-in" data-aos-delay="400" class="sphere3d mapping reveal-scale" onclick="showSection('mapping')"><div class="ico">🗺️</div><div class="txt">ترسیم<br>نقشه زمین</div></div>
+        <div data-aos="zoom-in" data-aos-delay="480" class="sphere3d weather-w reveal-scale" onclick="showSection('weather')"><div class="ico">🌤️</div><div class="txt">هفتگی</div></div>
+        <div data-aos="zoom-in" data-aos-delay="560" class="sphere3d weather-m reveal-scale" onclick="showSection('weather')"><div class="ico">📅</div><div class="txt">ماهانه</div></div>
+      </div>
+      <div class="office-info reveal" id="office-info">
+        <strong>دفتر فنی مهندسی کشاورزی ماهور</strong><br>زیر نظر مهندس افشین دهقان<br>
+        <div class="links">
+          <span>گروه واتساپ: <a href="https://chat.whatsapp.com/BqiYo556JmYJWjJJgyXXgo" target="_blank">ورود به گروه</a></span>
+          <span>ایتا و روبیکا: <a href="https://eitaa.com/a.d1369" target="_blank">@a.d1369</a></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-news" data-aos="fade-up" class="content-sec" style="display:none"><div data-aos="fade-down" class="section-title">📰 اخبار سیاسی، فرهنگی، اجتماعی و اقتصادی</div><div class="news-list" id="country-news"></div></div>
+    <div id="sec-agri" data-aos="fade-up" class="content-sec" style="display:none"><div data-aos="fade-down" class="section-title">🌾 اخبار تخصصی کشاورزی و کشت دیم</div><div class="agri-list" id="agri-news"></div></div>
+    <div id="sec-services" data-aos="fade-up" class="content-sec" style="display:none"><div data-aos="fade-down" class="section-title">🛠️ خدمات دفتر فنی ماهور</div><div class="welcome-section"><div class="spheres-row" id="services-spheres"></div><div style="background:#fff3e0;border-radius:14px;padding:16px;margin-top:16px;border:1px solid #ffcc80"><strong style="color:#e65100">🎁 پاداش حضور در سامانه:</strong> تعمیرات موبایل کاربران به صورت <b>رایگان</b> انجام می‌شود.</div></div></div>
+    <div id="sec-contact" data-aos="fade-up" class="content-sec" style="display:none"><div data-aos="fade-down" class="section-title">📞 ارتباط مستقیم با دفتر</div><div class="welcome-section" style="text-align:center"><p style="margin-bottom:16px">از طریق ایمیل یا واتساپ شخصی ریاست دفتر با ما در ارتباط باشید:</p><p style="font-size:1.1rem;margin:10px 0">📧 <a href="mailto:a.dehghan3469@gmail.com">a.dehghan3469@gmail.com</a></p><p style="font-size:1.1rem;margin:10px 0">📧 <a href="mailto:A.dehghan136767@gmail.com">A.dehghan136767@gmail.com</a></p><p style="font-size:1.15rem;margin:18px 0">💬 واتساپ شخصی ریاست دفتر: <strong>@a.d1369</strong></p><a href="https://wa.me/989174808755" target="_blank" class="btn-main" style="max-width:280px;margin:16px auto;display:block;text-decoration:none">ارسال پیام واتساپ</a></div></div>
+    <div id="sec-farm" data-aos="fade-up" class="content-sec" style="display:none"><div data-aos="fade-down" class="section-title">📌 مزرعه من — ترسیم حدود و پایش</div><div id="map-section"><p style="margin-bottom:12px;color:var(--muted);font-size:.92rem">روی نقشه کلیک کنید تا موقعیت مزرعه خود را با 📌 علامت بگذارید. نقشه قابلیت زوم بالا دارد.</p><div class="map-controls"><button onclick="locateMe()">📍 موقعیت فعلی من</button><button onclick="openGoogleEarth()">🌍 باز کردن در Google Earth</button><button onclick="clearPin()">🗑️ پاک کردن علامت</button></div><div id="farm-map"></div><div class="farm-info" id="farm-status">هنوز موقعیتی ثبت نشده. روی نقشه کلیک کنید.</div></div></div>
+
+    <!-- بخش جدید: ترسیم نقشه زمین -->
+    <div id="sec-mapping" data-aos="fade-up" class="content-sec" style="display:none">
+      <div data-aos="fade-down" class="section-title">🗺️ ترسیم نقشه زمین توسط کشاورز</div>
+      <div id="mapping-section">
+        <div class="form-group" style="max-width:320px">
+          <label>انتخاب روستا / محل کشت</label>
+          <select id="mapping-village">
+            <option value="">— انتخاب کنید —</option>
+            <option value="بابامنیر">بابامنیر</option>
+            <option value="ماهور میلاتی">ماهور میلاتی</option>
+            <option value="نورآباد ممسنی">نورآباد ممسنی</option>
+            <option value="سایر">سایر (دستی وارد کنید)</option>
+          </select>
+        </div>
+        <div class="form-group" id="custom-village-wrap" style="display:none;max-width:320px">
+          <label>نام روستا</label>
+          <input type="text" id="custom-village" placeholder="نام روستا را بنویسید">
+        </div>
+        <p style="margin:12px 0;color:var(--muted);font-size:.92rem;line-height:1.7">
+          ۱. روستا را انتخاب کنید.<br>
+          ۲. دکمه «شروع ترسیم» را بزنید و از گوشه زمین نقطه بگذارید.<br>
+          ۳. دور تا دور زمین را نقطه بگذارید و در نهایت روی نقطه اول کلیک کنید تا شکل بسته شود.<br>
+          ۴. زمین را نام‌گذاری کرده و ذخیره کنید. می‌توانید PDF مختصات و شکل زمین را دانلود کنید.
+        </p>
+        <div class="map-controls">
+          <button class="btn-success" onclick="startPolygonDraw()">✏️ شروع ترسیم پلی‌گون</button>
+          <button class="btn-secondary" onclick="finishAndSaveLand()">💾 ذخیره زمین فعلی</button>
+          <button class="btn-danger" onclick="clearCurrentDrawing()">🗑️ پاک کردن ترسیم</button>
+          <button onclick="locateMeMapping()">📍 موقعیت من</button>
+        </div>
+        <div id="mapping-map"></div>
+        <div class="mapping-info" id="mapping-status">
+          هنوز زمینی ترسیم نشده. روستا را انتخاب و ترسیم را شروع کنید.
+        </div>
+
+        <!-- پنل محاسبه تبخیر و تعرق -->
+        <div id="et-panel" style="margin-top:24px;background:#e3f2fd;border-radius:16px;padding:18px;border:1px solid #90caf9">
+          <h3 style="color:#1565c0;margin-bottom:12px">💧 محاسبه دقیق تبخیر و تعرق (FAO-56)</h3>
+          <p style="font-size:.88rem;color:#37474f;margin-bottom:14px;line-height:1.7">
+            بر اساس روش استاندارد <b>فائو پنمن-مانتیث</b> (ET0) + ضریب گیاهی (Kc) + رطوبت خاک.<br>
+            خروجی: نیاز آبی (ETc)، <b>شاخص سبزینگی تخمینی</b> و <b>شاخص تنش آبی</b> برای ۷ روز آینده.
+          </p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+            <div class="form-group" style="margin:0;min-width:160px">
+              <label>محصول</label>
+              <select id="et-crop">
+                <option value="wheat">گندم (دیم/آبی)</option>
+                <option value="barley">جو</option>
+                <option value="sugarbeet">چغندرقند</option>
+                <option value="maize">ذرت</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;min-width:160px">
+              <label>مرحله رشد</label>
+              <select id="et-stage">
+                <option value="ini">اولیه (Initial)</option>
+                <option value="mid" selected>میانی (Mid-season)</option>
+                <option value="end">انتهایی (Late)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;min-width:140px">
+              <label>زمین (اختیاری)</label>
+              <select id="et-land">
+                <option value="">موقعیت پیش‌فرض</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-secondary" onclick="calculateET()">محاسبه تبخیر و تعرق ۷ روزه</button>
+          <div id="et-result" style="margin-top:16px;font-size:.92rem;line-height:1.8"></div>
+        </div>
+
+        <div id="saved-lands" style="margin-top:20px"></div>
+      </div>
+    </div>
+
+    <div id="sec-weather" data-aos="fade-up" class="content-sec" style="display:none">
+      <div data-aos="fade-down" class="section-title">🌤️ پیش‌بینی آب و هوا</div>
+      <div class="spheres-row">
+        <div data-aos="zoom-in" data-aos-delay="640" class="sphere3d weather-w" style="width:150px;height:150px" onclick="loadWeekly()"><div class="ico">📅</div><div class="txt">پیش‌بینی<br>هفتگی</div></div>
+        <div data-aos="zoom-in" data-aos-delay="720" class="sphere3d weather-m" style="width:150px;height:150px" onclick="loadMonthly()"><div class="ico">🗓️</div><div class="txt">پیش‌بینی<br>ماهانه</div></div>
+      </div>
+      <div class="welcome-section" id="forecast-box"><p style="text-align:center;color:var(--muted)">یکی از کره‌های بالا را انتخاب کنید.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="detail-modal"><div class="modal" id="modal-content"><button class="close-modal" onclick="closeModal()">×</button><h3 id="modal-title">جزئیات</h3><div id="modal-body"></div></div></div>
+<div class="toast-container" id="toast-container"></div>
+<div id="confetti-layer"></div>
+<div class="footer-fixed">دفتر فنی مهندسی کشاورزی ماهور — بابامنیر | مهندس افشین دهقان | ایتا و روبیکا: @a.d1369</div>
+
+<script>
+const BG_IMAGES=['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600','https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1600','https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1600','https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1600','https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1600','https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1600'];
+const COUNTRY_NEWS=[{title:'نشست کمیسیون کشاورزی مجلس درباره کشت دیم',summary:'نمایندگان بر حمایت از کشاورزان مناطق خشک تأکید کردند.',url:'https://www.icana.ir'},{title:'افزایش قیمت نهاده‌های دامی در بازار',summary:'نوسان نرخ ارز باعث رشد قیمت ذرت و سویا شده است.',url:'https://www.irna.ir'},{title:'برنامه دولت برای توسعه آبیاری تحت فشار',summary:'وزارت نیرو و جهاد کشاورزی تفاهم‌نامه جدید امضا کردند.',url:'https://www.mehrnews.com'},{title:'وضعیت بارش‌های پاییزی در فارس',summary:'بارش‌ها نسبت به میانگین بلندمدت هنوز کمتر است.',url:'https://www.isna.ir'},{title:'صادرات محصولات کشاورزی ایران رشد کرد',summary:'پسته، زعفران و خرما همچنان پیشتاز صادرات هستند.',url:'https://www.tasnimnews.com'}];
+const AGRI_NEWS=[{title:'توصیه کمیسیون تخصصی جهاد کشاورزی فارس برای کشت گندم دیم',summary:'استفاده از ارقام مقاوم به خشکی و زمان‌بندی صحیح کاشت تأکید شد.',url:'https://www.maj.ir'},{title:'سخنان معاون وزیر جهاد درباره بیمه محصولات دیم',summary:'پوشش بیمه‌ای برای مناطق خشک گسترش می‌یابد.',url:'https://www.irna.ir'},{title:'وضعیت رطوبت خاک در مناطق دیم‌خیز جنوب فارس',summary:'با توجه به بارش‌های اخیر، تنش آبی در برخی مزارع کاهش یافته.',url:'https://www.irimo.ir'},{title:'کارگاه آموزشی تغذیه گندم و جو دیم در نورآباد',summary:'دفتر فنی ماهور میزبان کارشناسان استانی بود.',url:'#'},{title:'هشدار درباره آفات پاییزی در مزارع چغندر',summary:'کشاورزان نسبت به سم‌پاشی به موقع اقدام کنند.',url:'https://www.maj.ir'}];
+const SERVICES=[{title:'مشاوره تغذیه گیاه و کوددهی',desc:'برنامه کودی دقیق بر اساس آزمایش خاک و نوع کشت',color:'#2e7d32'},{title:'مبارزه با آفات و بیماری‌ها',desc:'شناسایی و توصیه سموم کم‌خطر و زمان‌بندی سم‌پاشی',color:'#c62828'},{title:'آزمایش خاک و آب',desc:'نمونه‌برداری و تفسیر نتایج برای بهینه‌سازی کود',color:'#1565c0'},{title:'مشاوره کشت دیم',desc:'ارقام مناسب، زمان کاشت و مدیریت رطوبت',color:'#6a1b9a'},{title:'تعمیرات موبایل (رایگان)',desc:'پاداش حضور در سامانه — تعمیر نرم‌افزاری و سخت‌افزاری',color:'#e65100'},{title:'مشاوره سند و حدود اراضی',desc:'راهنمایی در خصوص حدود و مسائل حقوقی زمین',color:'#00695c'}];
+const LOCS={babamenir:{lat:30.07,lon:51.52}};
+let currentUser=null,captchaValue='',farmMap=null,farmMarker=null,farmLatLng=null,intendedSection='home',bgIndex=0;
+let mappingMap=null,drawnItems=null,drawControl=null,currentPolygon=null,currentPoints=[],pointMarkers=[];
+
+/* ===== GSAP + ScrollTrigger (خلاصه) ===== */
+function initLandingAnimations(){
+  const tl=gsap.timeline({defaults:{ease:"power3.out"}});
+  tl.to("#main-title",{opacity:1,y:0,duration:.8}).to("#main-sub",{opacity:1,y:0,duration:.6},"-=.4")
+    .to("#hero-weather",{opacity:1,y:0,duration:.9,ease:"back.out(1.4)"},"-=.3")
+    .to(".wheat-cluster",{opacity:1,y:0,scale:1,duration:.7,stagger:.1,ease:"back.out(1.6)"},"-=.4");
+  gsap.to("#hero-weather",{y:-10,duration:2.5,repeat:-1,yoyo:true,ease:"sine.inOut"});
+  gsap.to(".wheat-stem",{rotation:5,duration:2.2,repeat:-1,yoyo:true,ease:"sine.inOut",transformOrigin:"50% 100%",stagger:.25});
+  gsap.to(".grain",{scale:1.08,duration:1.6,repeat:-1,yoyo:true,ease:"sine.inOut",stagger:.1});
+  document.querySelectorAll(".wheat-cluster").forEach(c=>{
+    c.addEventListener("mouseenter",()=>{gsap.to(c,{scale:1.15,y:-14,duration:.35,ease:"back.out(1.8)"});gsap.to(c.querySelector(".tooltip"),{opacity:1,y:-4,duration:.3})});
+    c.addEventListener("mouseleave",()=>{gsap.to(c,{scale:1,y:0,duration:.4});gsap.to(c.querySelector(".tooltip"),{opacity:0,y:0,duration:.25})});
+    c.addEventListener("click",()=>{gsap.to(c,{scale:.9,duration:.1,yoyo:true,repeat:1,onComplete:()=>startApp(c.dataset.section)})});
+  });
+}
+function initDashboardAnimations(){
+  setTimeout(()=>{
+    ScrollTrigger.create({trigger:"#dashboard",start:"top top",end:"bottom top",pin:"#top-bar",pinSpacing:false});
+    gsap.to("#welcome-sec",{opacity:1,y:0,duration:.8,scrollTrigger:{trigger:"#welcome-sec",start:"top 85%",toggleActions:"play none none reverse"}});
+    gsap.to("#home-spheres .sphere3d",{opacity:1,scale:1,duration:.65,stagger:.12,ease:"back.out(1.7)",scrollTrigger:{trigger:"#home-spheres",start:"top 80%",toggleActions:"play none none reverse"}});
+    gsap.to("#office-info",{opacity:1,y:0,duration:.8,scrollTrigger:{trigger:"#office-info",start:"top 88%",toggleActions:"play none none reverse"}});
+    gsap.to("#bg-layer",{yPercent:25,ease:"none",scrollTrigger:{trigger:"body",start:"top top",end:"bottom top",scrub:1.2}});
+    ScrollTrigger.refresh();
+  },120);
+  document.querySelectorAll("#home-spheres .sphere3d").forEach(s=>{
+    s.addEventListener("mouseenter",()=>gsap.to(s,{scale:1.18,rotationY:12,duration:.4,ease:"back.out(1.6)"}));
+    s.addEventListener("mouseleave",()=>gsap.to(s,{scale:1,rotationY:0,duration:.4}));
+  });
+}
+function createParticles(){
+  const c=document.getElementById("particles");
+  for(let i=0;i<35;i++){const p=document.createElement("div");p.className="particle";p.style.left=Math.random()*100+"%";p.style.width=p.style.height=(2+Math.random()*4)+"px";c.appendChild(p);
+    gsap.to(p,{y:-window.innerHeight-50,x:(Math.random()-.5)*80,opacity:0,duration:8+Math.random()*12,delay:Math.random()*10,repeat:-1,ease:"none",onStart:()=>gsap.set(p,{y:window.innerHeight+20,opacity:.5+Math.random()*.4})})}
+}
+function changeBackground(){const l=document.getElementById("bg-layer");gsap.to(l,{opacity:0,duration:.9,onComplete:()=>{l.style.backgroundImage=`url('${BG_IMAGES[bgIndex]}')`;bgIndex=(bgIndex+1)%BG_IMAGES.length;gsap.to(l,{opacity:1,duration:1.1})}})}
+setInterval(changeBackground,14000);changeBackground();
+
+function refreshCaptcha(){const ch="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";captchaValue="";for(let i=0;i<4;i++)captchaValue+=ch[Math.floor(Math.random()*ch.length)];document.getElementById("captcha-code").textContent=captchaValue}
+refreshCaptcha();
+
+function getWeatherSVG(t){if(t==="sunny")return`<svg class="weather-icon-svg" viewBox="0 0 64 64"><circle class="sun-core" cx="32" cy="32" r="12" fill="#FFD54F"/><g class="sun-ray"><line x1="32" y1="6" x2="32" y2="14" stroke="#FFB300" stroke-width="3" stroke-linecap="round"/><line x1="32" y1="50" x2="32" y2="58" stroke="#FFB300" stroke-width="3" stroke-linecap="round"/><line x1="6" y1="32" x2="14" y2="32" stroke="#FFB300" stroke-width="3" stroke-linecap="round"/><line x1="50" y1="32" x2="58" y2="32" stroke="#FFB300" stroke-width="3" stroke-linecap="round"/></g></svg>`;if(t==="cloudy")return`<svg class="weather-icon-svg" viewBox="0 0 64 64"><circle cx="32" cy="26" r="10" fill="#FFD54F" opacity=".85"/><g class="cloud"><ellipse cx="28" cy="40" rx="16" ry="10" fill="#ECEFF1"/><ellipse cx="40" cy="38" rx="12" ry="9" fill="#CFD8DC"/></g></svg>`;if(t==="rainy")return`<svg class="weather-icon-svg" viewBox="0 0 64 64"><g class="cloud"><ellipse cx="28" cy="28" rx="16" ry="10" fill="#90A4AE"/><ellipse cx="40" cy="26" rx="12" ry="9" fill="#78909C"/></g><line class="rain-line" x1="22" y1="40" x2="20" y2="52" stroke="#4FC3F7" stroke-width="2.5"/><line class="rain-line" x1="32" y1="42" x2="30" y2="54" stroke="#4FC3F7" stroke-width="2.5"/><line class="rain-line" x1="42" y1="40" x2="40" y2="52" stroke="#4FC3F7" stroke-width="2.5"/></svg>`;return`<svg class="weather-icon-svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="12" fill="#B0BEC5"/></svg>`}
+
+async function loadHeroWeather(){
+  try{const loc=LOCS.babamenir;const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,relative_humidity_2m,precipitation_probability,wind_speed_10m,weather_code&timezone=Asia%2FTehran`);const data=await res.json();const c=data.current;const code=c.weather_code;
+    document.getElementById("hero-temp").textContent=c.temperature_2m.toFixed(0)+"°";document.getElementById("hero-hum").textContent=c.relative_humidity_2m+"%";document.getElementById("hero-rain").textContent=(c.precipitation_probability||0)+"%";document.getElementById("hero-wind").textContent=c.wind_speed_10m.toFixed(0)+" km/h";
+    const hero=document.getElementById("hero-weather");const rainLayer=document.getElementById("rain-layer");rainLayer.innerHTML="";let desc="نامشخص",iconType="cloudy";hero.classList.remove("sunny","cloudy","rainy");
+    if([0,1].includes(code)){desc="آفتابی و صاف ☀️";hero.classList.add("sunny");iconType="sunny"}
+    else if([2,3,45,48].includes(code)){desc="نیمه‌ابری / مه ⛅";hero.classList.add("cloudy");iconType="cloudy"}
+    else if([51,53,55,61,63,65,80,81,82,95,96,99].includes(code)){desc="بارانی 🌧️";hero.classList.add("rainy");iconType="rainy";for(let i=0;i<25;i++){const d=document.createElement("div");d.className="rain-drop";d.style.left=Math.random()*100+"%";d.style.height=(10+Math.random()*12)+"px";rainLayer.appendChild(d);gsap.to(d,{y:320,x:8,opacity:.15,duration:.55+Math.random()*.85,delay:Math.random()*2,repeat:-1,ease:"none",onStart:()=>gsap.set(d,{y:-30,opacity:.9})})}}
+    else{desc="وضعیت جوی متغیر";hero.classList.add("cloudy")}
+    document.getElementById("hero-desc").textContent=desc;document.getElementById("weather-icon-container").innerHTML=getWeatherSVG(iconType);
+  }catch(e){document.getElementById("hero-desc").textContent="خطا در دریافت داده"}
+}
+
+function startApp(section){intendedSection=section||"home";const saved=localStorage.getItem("babamenir_user");if(saved){currentUser=JSON.parse(saved);enterDashboard()}else{document.getElementById("landing").classList.remove("active");document.getElementById("register-screen").classList.add("active");gsap.to("#reg-card",{opacity:1,scale:1,duration:.55,ease:"back.out(1.5)"})}}
+function completeRegister(){
+  const name=document.getElementById("reg-name").value.trim(),family=document.getElementById("reg-family").value.trim(),village=document.getElementById("reg-village").value.trim(),email=document.getElementById("reg-email").value.trim(),phone=document.getElementById("reg-phone").value.trim(),captcha=document.getElementById("captcha-input").value.trim().toUpperCase(),err=document.getElementById("reg-error");
+  if(!name||!family||!village||!email||!phone){err.textContent="لطفاً همه فیلدها را پر کنید.";return}
+  if(captcha!==captchaValue){err.textContent="کد امنیتی اشتباه است.";refreshCaptcha();return}
+  currentUser={name,family,village,email,phone,registeredAt:new Date().toISOString(),farm:null,lands:[]};
+  localStorage.setItem("babamenir_user",JSON.stringify(currentUser));
+  let archive=JSON.parse(localStorage.getItem("babamenir_archive")||"[]");archive.push({...currentUser,id:Date.now()});localStorage.setItem("babamenir_archive",JSON.stringify(archive));
+  showToast("ثبت‌نام با موفقیت انجام شد. خوش آمدید!","success");
+  burstConfetti(50);
+  setTimeout(()=>enterDashboard(),500);
+}
+function enterDashboard(){
+  document.getElementById("landing").classList.remove("active");document.getElementById("register-screen").classList.remove("active");document.getElementById("dashboard").classList.add("active");
+  document.getElementById("user-display").textContent=currentUser.name+" "+currentUser.family+" | "+currentUser.village;
+  document.getElementById("welcome-name").textContent=currentUser.name;
+  loadCurrentWeather();renderCountryNews();renderAgriNews();renderServices();initDashboardAnimations();
+  if(intendedSection&&intendedSection!=="home")showSection(intendedSection);
+}
+function logout(){ScrollTrigger.getAll().forEach(st=>st.kill());localStorage.removeItem("babamenir_user");currentUser=null;document.getElementById("dashboard").classList.remove("active");document.getElementById("landing").classList.add("active");gsap.set(["#main-title","#main-sub","#hero-weather",".wheat-cluster"],{clearProps:"all"});gsap.set(".wheat-cluster",{opacity:0,y:50,scale:.8});gsap.set("#main-title,#main-sub",{opacity:0});gsap.set("#hero-weather",{opacity:0,y:40});initLandingAnimations();loadHeroWeather()}
+function showSection(id){
+  document.querySelectorAll(".content-sec").forEach(el=>el.style.display="none");
+  const sec=document.getElementById("sec-"+id);if(sec){sec.style.display="block";gsap.fromTo(sec,{opacity:0,y:20},{opacity:1,y:0,duration:.45,ease:"power2.out"})}
+  document.querySelectorAll(".top-bar button").forEach(b=>b.classList.remove("active"));
+  if(id==="farm")setTimeout(initFarmMap,200);
+  if(id==="mapping")setTimeout(initMappingMap,200);
+  ScrollTrigger.refresh();
+
+  setTimeout(()=>animateSectionIn("sec-"+id),40);
+  if(typeof AOS!=="undefined")setTimeout(()=>AOS.refresh(),100);
+}
+function renderCountryNews(){document.getElementById("country-news").innerHTML=COUNTRY_NEWS.map(n=>`<div class="news-item" onclick="window.open('${n.url}','_blank')"><div class="title">${n.title}</div><div class="summary">${n.summary}</div></div>`).join("")}
+function renderAgriNews(){document.getElementById("agri-news").innerHTML=AGRI_NEWS.map(n=>`<div class="news-item" onclick="window.open('${n.url}','_blank')"><div class="title">${n.title}</div><div class="summary">${n.summary}</div></div>`).join("")}
+function renderServices(){document.getElementById("services-spheres").innerHTML=SERVICES.map((s,i)=>`<div data-aos="zoom-in" data-aos-delay="800" class="sphere3d" style="background:radial-gradient(circle at 35% 30%,${s.color}cc,${s.color} 70%,${s.color}aa);opacity:0;transform:scale(.5)" onclick="showServiceDetail(${i})"><div class="txt">${s.title}</div></div>`).join("");gsap.to("#services-spheres .sphere3d",{opacity:1,scale:1,duration:.55,stagger:.1,ease:"back.out(1.6)"})}
+function showServiceDetail(i){const s=SERVICES[i];document.getElementById("modal-title").textContent=s.title;document.getElementById("modal-body").innerHTML=`<p style="line-height:1.8;margin-bottom:16px">${s.desc}</p><p>برای دریافت این خدمت با دفتر تماس بگیرید.</p><a href="https://wa.me/989174808755" target="_blank" class="btn-main" style="display:inline-block;width:auto;padding:10px 24px;margin-top:12px;text-decoration:none">درخواست واتساپ</a>`;document.getElementById("detail-modal").classList.add("show");gsap.fromTo("#modal-content",{scale:.85,opacity:0},{scale:1,opacity:1,duration:.4,ease:"back.out(1.6)"})}
+function closeModal(){gsap.to("#modal-content",{scale:.9,opacity:0,duration:.25,onComplete:()=>document.getElementById("detail-modal").classList.remove("show")})}
+async function loadCurrentWeather(){try{const loc=LOCS.babamenir;const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,relative_humidity_2m,precipitation_probability,wind_speed_10m,weather_code&timezone=Asia%2FTehran`);const data=await res.json();const c=data.current;document.getElementById("cw-temp").textContent=c.temperature_2m.toFixed(1);document.getElementById("cw-hum").textContent=c.relative_humidity_2m+"%";document.getElementById("cw-rain").textContent=(c.precipitation_probability||0)+"%";document.getElementById("cw-wind").textContent=c.wind_speed_10m.toFixed(0);const codes={0:"آفتابی",1:"عمدتاً صاف",2:"نیمه‌ابری",3:"ابری",45:"مه",61:"باران",80:"رگبار",95:"رعدوبرق"};document.getElementById("weather-desc").textContent=codes[c.weather_code]||"وضعیت نامشخص"}catch(e){document.getElementById("weather-desc").textContent="خطا در دریافت داده"}}
+async function loadWeekly(){const box=document.getElementById("forecast-box");box.innerHTML='<p style="text-align:center">در حال دریافت پیش‌بینی هفتگی...</p>';try{const loc=LOCS.babamenir;const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTehran&forecast_days=7`);const data=await res.json();const days=["یکشنبه","دوشنبه","سه‌شنبه","چهارشنبه","پنجشنبه","جمعه","شنبه"];let html='<h3 style="color:var(--primary);margin-bottom:14px">پیش‌بینی ۷ روز آینده</h3><div style="display:grid;gap:10px">';data.daily.time.forEach((t,i)=>{const d=new Date(t);html+=`<div style="display:flex;justify-content:space-between;align-items:center;background:#f5faf5;padding:10px 14px;border-radius:10px"><span>${days[d.getDay()]} ${t.slice(5)}</span><span>${data.daily.temperature_2m_min[i].toFixed(0)}° / ${data.daily.temperature_2m_max[i].toFixed(0)}°</span><span>بارش: ${data.daily.precipitation_probability_max[i]}%</span></div>`});html+="</div>";box.innerHTML=html;gsap.from("#forecast-box > *",{opacity:0,y:15,duration:.4,stagger:.05})}catch(e){box.innerHTML='<p style="color:#c62828">خطا در دریافت پیش‌بینی.</p>'}}
+function loadMonthly(){document.getElementById("forecast-box").innerHTML=`<h3 style="color:var(--primary);margin-bottom:14px">پیش‌بینی ماهانه و فصلی</h3><p style="line-height:1.8;margin-bottom:16px">برای پیش‌بینی‌های بلندمدت به سایت رسمی هواشناسی ایران مراجعه کنید:</p><a href="https://www.irimo.ir" target="_blank" class="btn-main" style="display:inline-block;width:auto;padding:12px 28px;text-decoration:none">ورود به irimo.ir</a>`;gsap.from("#forecast-box > *",{opacity:0,y:12,duration:.4,stagger:.08})}
+
+/* ===== مزرعه من (قبلی) ===== */
+function initFarmMap(){if(farmMap){farmMap.invalidateSize();return}farmMap=L.map("farm-map").setView([30.07,51.52],14);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(farmMap);if(currentUser&&currentUser.farm){farmLatLng=currentUser.farm;placePin(farmLatLng.lat,farmLatLng.lng)}farmMap.on("click",e=>{placePin(e.latlng.lat,e.latlng.lng);saveFarmLocation(e.latlng.lat,e.latlng.lng)})}
+function placePin(lat,lng){if(farmMarker)farmMap.removeLayer(farmMarker);farmMarker=L.marker([lat,lng]).addTo(farmMap).bindPopup("📌 مزرعه شما").openPopup();farmMap.setView([lat,lng],16);farmLatLng={lat,lng};updateFarmStatus(lat,lng)}
+function saveFarmLocation(lat,lng){if(!currentUser)return;currentUser.farm={lat,lng,savedAt:new Date().toISOString()};localStorage.setItem("babamenir_user",JSON.stringify(currentUser))}
+function updateFarmStatus(lat,lng){document.getElementById("farm-status").innerHTML=`<strong>موقعیت ثبت‌شده:</strong><br>عرض: ${lat.toFixed(5)} — طول: ${lng.toFixed(5)}<br><small>برای مشاهده تصاویر ماهواره‌ای از دکمه Google Earth استفاده کنید.</small>`}
+function locateMe(){if(!navigator.geolocation)return alert("پشتیبانی نمی‌شود");navigator.geolocation.getCurrentPosition(pos=>{placePin(pos.coords.latitude,pos.coords.longitude);saveFarmLocation(pos.coords.latitude,pos.coords.longitude)},()=>alert("دسترسی ممکن نشد"))}
+function openGoogleEarth(){const lat=farmLatLng?farmLatLng.lat:30.07,lng=farmLatLng?farmLatLng.lng:51.52;window.open(`https://earth.google.com/web/@${lat},${lng},1200a,1000d,35y,0h,0t,0r`,"_blank")}
+function clearPin(){if(farmMarker){farmMap.removeLayer(farmMarker);farmMarker=null}farmLatLng=null;if(currentUser){currentUser.farm=null;localStorage.setItem("babamenir_user",JSON.stringify(currentUser))}document.getElementById("farm-status").textContent="علامت پاک شد."}
+
+/* ===== ترسیم نقشه زمین (جدید) ===== */
+document.getElementById("mapping-village")?.addEventListener("change",function(){
+  document.getElementById("custom-village-wrap").style.display=this.value==="سایر"?"block":"none";
+});
+
+function initMappingMap(){
+  if(mappingMap){mappingMap.invalidateSize();return}
+  mappingMap=L.map("mapping-map",{maxZoom:22}).setView([30.07,51.52],16);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:22,attribution:"© OpenStreetMap"}).addTo(mappingMap);
+  // لایه ماهواره‌ای اختیاری
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Esri"}).addTo(mappingMap);
+
+  drawnItems=new L.FeatureGroup();
+  mappingMap.addLayer(drawnItems);
+
+  drawControl=new L.Control.Draw({
+    position:"topright",
+    draw:{
+      polygon:{allowIntersection:false,showArea:true,shapeOptions:{color:"#2e7d32",weight:3,fillColor:"#81c784",fillOpacity:0.35}},
+      polyline:false,rectangle:false,circle:false,circlemarker:false,marker:false
+    },
+    edit:{featureGroup:drawnItems,remove:true}
+  });
+  mappingMap.addControl(drawControl);
+
+  mappingMap.on(L.Draw.Event.CREATED,function(e){
+    const layer=e.layer;
+    drawnItems.clearLayers();
+    drawnItems.addLayer(layer);
+    currentPolygon=layer;
+    // شماره‌گذاری نقاط
+    const latlngs=layer.getLatLngs()[0];
+    currentPoints=latlngs.map((ll,i)=>({index:i+1,lat:ll.lat,lng:ll.lng}));
+    // پاک کردن مارکرهای قبلی
+    pointMarkers.forEach(m=>mappingMap.removeLayer(m));
+    pointMarkers=[];
+    latlngs.forEach((ll,i)=>{
+      const icon=L.divIcon({className:"point-num",html:`<div class="point-badge">${i+1}</div>`,iconSize:[22,22],iconAnchor:[11,11]});
+      const m=L.marker(ll,{icon}).addTo(mappingMap);
+      pointMarkers.push(m);
+    });
+    const area=(L.GeometryUtil&&L.GeometryUtil.geodesicArea)?(L.GeometryUtil.geodesicArea(latlngs)/10000).toFixed(3):"—";
+    document.getElementById("mapping-status").innerHTML=`
+      <strong>پلی‌گون ترسیم شد!</strong><br>
+      تعداد نقاط: ${currentPoints.length}<br>
+      مساحت تقریبی: ${area} هکتار<br>
+      حالا دکمه «ذخیره زمین فعلی» را بزنید و نام بدهید.`;
+  });
+
+  renderSavedLands();
+}
+
+function startPolygonDraw(){
+  if(!mappingMap)return;
+  // فعال کردن ابزار رسم پلی‌گون
+  new L.Draw.Polygon(mappingMap,drawControl.options.draw.polygon).enable();
+  document.getElementById("mapping-status").textContent="در حال ترسیم... روی نقشه کلیک کنید و دور زمین نقطه بگذارید. برای بستن روی نقطه اول کلیک کنید.";
+}
+
+function clearCurrentDrawing(){
+  if(drawnItems)drawnItems.clearLayers();
+  pointMarkers.forEach(m=>mappingMap.removeLayer(m));
+  pointMarkers=[];currentPolygon=null;currentPoints=[];
+  document.getElementById("mapping-status").textContent="ترسیم پاک شد. دوباره شروع کنید.";
+}
+
+function finishAndSaveLand(){
+  if(!currentPoints||currentPoints.length<3){
+    alert("لطفاً ابتدا یک پلی‌گون با حداقل ۳ نقطه ترسیم کنید.");
+    return;
+  }
+  let village=document.getElementById("mapping-village").value;
+  if(village==="سایر")village=document.getElementById("custom-village").value.trim();
+  if(!village){alert("لطفاً روستا را انتخاب یا وارد کنید.");return}
+
+  const landName=prompt("نام این زمین را وارد کنید (مثلاً: زمین شماره ۱ یا مزرعه شمالی):","زمین شماره "+((currentUser.lands?.length||0)+1));
+  if(!landName)return;
+
+  const land={
+    id:Date.now(),
+    name:landName,
+    village:village,
+    points:currentPoints,
+    createdAt:new Date().toISOString(),
+    areaHa:null
+  };
+  if(!currentUser.lands)currentUser.lands=[];
+  currentUser.lands.push(land);
+  localStorage.setItem("babamenir_user",JSON.stringify(currentUser));
+  // آرشیو
+  let archive=JSON.parse(localStorage.getItem("babamenir_lands_archive")||"[]");
+  archive.push({...land,user:currentUser.name+" "+currentUser.family});
+  localStorage.setItem("babamenir_lands_archive",JSON.stringify(archive));
+
+  renderSavedLands();
+  document.getElementById("mapping-status").innerHTML=`✅ زمین «${landName}» با موفقیت ذخیره شد.<br>می‌توانید PDF آن را دانلود کنید یا زمین جدیدی ترسیم کنید.`;
+  showToast("زمین «"+landName+"» ذخیره شد","success");
+  burstConfetti(35);
+  clearCurrentDrawing();
+}
+
+function renderSavedLands(){
+  const container=document.getElementById("saved-lands");
+  const etLandSelect=document.getElementById("et-land");
+  if(!currentUser||!currentUser.lands||currentUser.lands.length===0){
+    container.innerHTML="<p style='color:var(--muted)'>هنوز زمینی ذخیره نشده است.</p>";
+    if(etLandSelect) etLandSelect.innerHTML='<option value="">موقعیت پیش‌فرض</option>';
+    return;
+  }
+  if(etLandSelect){
+    etLandSelect.innerHTML='<option value="">موقعیت پیش‌فرض</option>'+
+      currentUser.lands.map((land,idx)=>`<option value="${idx}">${land.name} — ${land.village}</option>`).join("");
+  }
+  container.innerHTML="<h3 style='color:var(--primary);margin-bottom:12px'>زمین‌های ثبت‌شده شما</h3>"+
+    currentUser.lands.map((land,idx)=>`
+      <div data-aos="zoom-in" class="land-card">
+        <h4>${land.name} — ${land.village}</h4>
+        <div class="coords">
+          ${land.points.map(p=>`نقطه ${p.index}: ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`).join("<br>")}
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-secondary" onclick="downloadLandPDF(${idx})">📄 دانلود PDF</button>
+          <button class="btn-secondary" onclick="calculateETForLand(${idx})">💧 محاسبه ET این زمین</button>
+          <button class="btn-danger" onclick="deleteLand(${idx})">حذف</button>
+        </div>
+        <p style="font-size:.8rem;color:#558b2f;margin-top:8px">پایش سبزینگی و تنش آبی بر اساس ET و بارش در دسترس است.</p>
+      </div>`).join("");
+}
+
+/* ===== ضرایب گیاهی FAO (تقریبی برای شرایط ایران) ===== */
+const CROP_KC = {
+  wheat:     { ini: 0.30, mid: 1.15, end: 0.30, name: "گندم" },
+  barley:    { ini: 0.30, mid: 1.15, end: 0.25, name: "جو" },
+  sugarbeet: { ini: 0.35, mid: 1.20, end: 0.70, name: "چغندرقند" },
+  maize:     { ini: 0.30, mid: 1.20, end: 0.50, name: "ذرت" }
+};
+
+function getLandCentroid(land){
+  if(!land || !land.points || land.points.length===0) return LOCS.babamenir;
+  const lats = land.points.map(p=>p.lat);
+  const lngs = land.points.map(p=>p.lng);
+  return {
+    lat: lats.reduce((a,b)=>a+b,0)/lats.length,
+    lon: lngs.reduce((a,b)=>a+b,0)/lngs.length
+  };
+}
+
+async function calculateET(){
+  const crop = document.getElementById("et-crop").value;
+  const stage = document.getElementById("et-stage").value;
+  const landIdx = document.getElementById("et-land").value;
+  let loc = LOCS.babamenir;
+  if(landIdx !== "" && currentUser && currentUser.lands[landIdx]){
+    loc = getLandCentroid(currentUser.lands[landIdx]);
+  }
+  await runETCalculation(loc, crop, stage);
+}
+
+async function calculateETForLand(idx){
+  document.getElementById("et-land").value = String(idx);
+  document.getElementById("et-panel").scrollIntoView({behavior:"smooth"});
+  await calculateET();
+}
+
+async function runETCalculation(loc, crop, stage){
+  const resultBox = document.getElementById("et-result");
+  resultBox.innerHTML = '<p style="text-align:center" class="shimmer-box">در حال دریافت داده هواشناسی، رطوبت خاک و محاسبه ET0 و سبزینگی...</p>';
+  showToast("در حال محاسبه تبخیر و تعرق...","info",2000);
+  try{
+    // ET0 + بارش + دما + رطوبت خاک در دو عمق
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+      `&daily=et0_fao_evapotranspiration,precipitation_sum,temperature_2m_max,temperature_2m_min,soil_moisture_0_to_7cm,soil_moisture_7_to_28cm` +
+      `&timezone=Asia%2FTehran&forecast_days=7`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(!data.daily || !data.daily.et0_fao_evapotranspiration){
+      resultBox.innerHTML = '<p style="color:#c62828">داده ET0 دریافت نشد.</p>';
+      return;
+    }
+    const kcTable = CROP_KC[crop] || CROP_KC.wheat;
+    const kc = kcTable[stage] || kcTable.mid;
+    const et0 = data.daily.et0_fao_evapotranspiration;
+    const precip = data.daily.precipitation_sum || [];
+    const soilTop = data.daily.soil_moisture_0_to_7cm || [];
+    const soilDeep = data.daily.soil_moisture_7_to_28cm || [];
+    const days = data.daily.time;
+    const dayNames = ["یکشنبه","دوشنبه","سه‌شنبه","چهارشنبه","پنجشنبه","جمعه","شنبه"];
+
+    let totalET0 = 0, totalETc = 0, totalPrecip = 0;
+    let rows = "";
+    let stressScores = []; // 0 = خوب، 100 = تنش شدید
+
+    et0.forEach((v,i)=>{
+      const etc = v * kc;
+      const p = precip[i] || 0;
+      const smTop = soilTop[i] != null ? soilTop[i] : null;
+      const smDeep = soilDeep[i] != null ? soilDeep[i] : null;
+      totalET0 += v;
+      totalETc += etc;
+      totalPrecip += p;
+
+      // شاخص تنش روزانه: ترکیب کمبود بارش نسبت به ETc + رطوبت خاک
+      let dayStress = 0;
+      if(etc > 0){
+        const precipRatio = Math.min(p / etc, 1.5);
+        dayStress += Math.max(0, (1 - precipRatio) * 50);
+      }
+      // رطوبت خاک سطحی (تقریبی: مقادیر معمول 0.1 تا 0.4 m3/m3)
+      if(smTop != null){
+        if(smTop < 0.12) dayStress += 35;
+        else if(smTop < 0.18) dayStress += 20;
+        else if(smTop < 0.25) dayStress += 8;
+      }
+      if(smDeep != null){
+        if(smDeep < 0.12) dayStress += 15;
+        else if(smDeep < 0.18) dayStress += 8;
+      }
+      dayStress = Math.min(100, Math.round(dayStress));
+      stressScores.push(dayStress);
+
+      let stressLabel = "✅ مناسب";
+      if(dayStress >= 70) stressLabel = "🚨 تنش شدید";
+      else if(dayStress >= 45) stressLabel = "⚠️ تنش متوسط";
+      else if(dayStress >= 25) stressLabel = "نسبتاً کم‌آب";
+
+      const d = new Date(days[i]);
+      const smTxt = smTop != null ? smTop.toFixed(3) : "—";
+      rows += `<tr>
+        <td style="padding:6px 8px;border-bottom:1px solid #bbdefb">${dayNames[d.getDay()]} ${days[i].slice(5)}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #bbdefb;text-align:center">${v.toFixed(2)}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #bbdefb;text-align:center">${etc.toFixed(2)}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #bbdefb;text-align:center">${p.toFixed(1)}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #bbdefb;text-align:center">${smTxt}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #bbdefb;text-align:center">${stressLabel}</td>
+      </tr>`;
+    });
+
+    const waterBalance = totalPrecip - totalETc;
+    const avgStress = stressScores.length ? Math.round(stressScores.reduce((a,b)=>a+b,0)/stressScores.length) : 0;
+
+    // سبزینگی تخمینی (0–100)
+    // پایه: مرحله رشد + تراز آبی + رطوبت خاک
+    let greennessBase = 55;
+    if(stage === "mid") greennessBase = 78;
+    else if(stage === "end") greennessBase = 62;
+    else greennessBase = 40;
+
+    // جریمه تنش
+    greennessBase -= avgStress * 0.45;
+    // پاداش بارش کافی
+    if(waterBalance > 5) greennessBase += 8;
+    if(waterBalance < -15) greennessBase -= 12;
+
+    // میانگین رطوبت خاک سطحی ۷ روز
+    const validSm = soilTop.filter(v => v != null);
+    const avgSmTop = validSm.length ? validSm.reduce((a,b)=>a+b,0)/validSm.length : 0.2;
+    if(avgSmTop > 0.28) greennessBase += 10;
+    else if(avgSmTop < 0.14) greennessBase -= 15;
+
+    const greenness = Math.max(5, Math.min(98, Math.round(greennessBase)));
+
+    // رنگ و برچسب سبزینگی
+    let greenLabel, greenColor, greenBg;
+    if(greenness >= 75){ greenLabel = "سبزینگی خوب"; greenColor = "#1b5e20"; greenBg = "#c8e6c9"; }
+    else if(greenness >= 55){ greenLabel = "سبزینگی متوسط"; greenColor = "#558b2f"; greenBg = "#dcedc8"; }
+    else if(greenness >= 35){ greenLabel = "سبزینگی ضعیف"; greenColor = "#e65100"; greenBg = "#ffe0b2"; }
+    else { greenLabel = "سبزینگی بسیار ضعیف / خطر تنش"; greenColor = "#b71c1c"; greenBg = "#ffcdd2"; }
+
+    // رنگ تنش
+    let stressColor, stressBg, stressText;
+    if(avgStress >= 70){ stressColor = "#b71c1c"; stressBg = "#ffcdd2"; stressText = "تنش آبی شدید"; }
+    else if(avgStress >= 45){ stressColor = "#e65100"; stressBg = "#ffe0b2"; stressText = "تنش آبی متوسط"; }
+    else if(avgStress >= 25){ stressColor = "#f9a825"; stressBg = "#fff9c4"; stressText = "کمبود رطوبت خفیف"; }
+    else { stressColor = "#1b5e20"; stressBg = "#c8e6c9"; stressText = "بدون تنش قابل توجه"; }
+
+    // توصیه آبیاری
+    let recommendation = "";
+    if(avgStress >= 70 || waterBalance < -15){
+      recommendation = `<div style="background:#ffebee;border-radius:12px;padding:14px;margin-top:14px;border:1px solid #ef9a9a">
+        <strong style="color:#c62828">🚨 تنش آبی جدی + سبزینگی پایین</strong><br>
+        کمبود تجمعی حدود <b>${Math.abs(Math.min(waterBalance,0)).toFixed(1)} میلی‌متر</b> و شاخص تنش ${avgStress}/100.<br>
+        <b>توصیه فوری:</b> آبیاری تکمیلی ضروری است. در کشت دیم و شرایط کم‌آب، <b>آبیاری سطحی به روش مهپاشی (Fog / Mist)</b> در ساعات خنک صبح یا عصر توصیه می‌شود تا تلفات تبخیر کاهش یابد و رطوبت لایه سطحی خاک حفظ شود.
+      </div>`;
+    } else if(avgStress >= 40 || waterBalance < -5){
+      recommendation = `<div style="background:#fff3e0;border-radius:12px;padding:14px;margin-top:14px;border:1px solid #ffcc80">
+        <strong style="color:#e65100">⚠️ کمبود رطوبت متوسط</strong><br>
+        شاخص تنش ${avgStress}/100. در صورت ادامه خشکی، آبیاری سبک یا مهپاشی در ساعات خنک روز مفید است.
+      </div>`;
+    } else {
+      recommendation = `<div style="background:#e8f5e9;border-radius:12px;padding:14px;margin-top:14px;border:1px solid #a5d6a7">
+        <strong style="color:#2e7d32">✅ وضعیت رطوبتی و سبزینگی قابل قبول</strong><br>
+        بارش و رطوبت خاک تقریباً نیاز آبی محصول را پوشش می‌دهد. پایش هفتگی ادامه یابد.
+      </div>`;
+    }
+
+    resultBox.innerHTML = `
+      <p><b>محصول:</b> ${kcTable.name} | <b>مرحله:</b> ${stage} | <b>Kc = ${kc}</b></p>
+      <p style="font-size:.85rem;color:#546e7a">موقعیت: ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)} | روش: FAO-56 + رطوبت خاک Open-Meteo</p>
+
+      <!-- کارت‌های سبزینگی و تنش -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0">
+        <div style="background:${greenBg};border-radius:14px;padding:16px;text-align:center;border:1px solid ${greenColor}44">
+          <div style="font-size:.85rem;color:${greenColor};margin-bottom:4px">🌿 شاخص سبزینگی تخمینی</div>
+          <div style="font-size:2.2rem;font-weight:800;color:${greenColor}">${greenness}%</div>
+          <div style="font-size:.9rem;font-weight:600;color:${greenColor}">${greenLabel}</div>
+          <div style="margin-top:10px;height:10px;background:#fff;border-radius:6px;overflow:hidden">
+            <div style="height:100%;width:${greenness}%;background:${greenColor};border-radius:6px;transition:width .6s"></div>
+          </div>
+        </div>
+        <div style="background:${stressBg};border-radius:14px;padding:16px;text-align:center;border:1px solid ${stressColor}44">
+          <div style="font-size:.85rem;color:${stressColor};margin-bottom:4px">💧 شاخص تنش آبی</div>
+          <div style="font-size:2.2rem;font-weight:800;color:${stressColor}">${avgStress}</div>
+          <div style="font-size:.9rem;font-weight:600;color:${stressColor}">${stressText}</div>
+          <div style="margin-top:10px;height:10px;background:#fff;border-radius:6px;overflow:hidden">
+            <div style="height:100%;width:${avgStress}%;background:${stressColor};border-radius:6px;transition:width .6s"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;margin-top:10px">
+        <table style="width:100%;border-collapse:collapse;font-size:.85rem;background:#fff;border-radius:10px;overflow:hidden">
+          <thead>
+            <tr style="background:#1565c0;color:#fff">
+              <th style="padding:8px">روز</th>
+              <th style="padding:8px">ET0</th>
+              <th style="padding:8px">ETc</th>
+              <th style="padding:8px">بارش</th>
+              <th style="padding:8px">رطوبت خاک<br><small>۰–۷cm</small></th>
+              <th style="padding:8px">وضعیت</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr style="background:#e3f2fd;font-weight:700">
+              <td style="padding:8px">جمع ۷ روز</td>
+              <td style="padding:8px;text-align:center">${totalET0.toFixed(1)}</td>
+              <td style="padding:8px;text-align:center">${totalETc.toFixed(1)}</td>
+              <td style="padding:8px;text-align:center">${totalPrecip.toFixed(1)}</td>
+              <td style="padding:8px;text-align:center">avg ${(avgSmTop*100).toFixed(0)}%</td>
+              <td style="padding:8px;text-align:center">${waterBalance>=0?"+":""}${waterBalance.toFixed(1)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      ${recommendation}
+      <p style="font-size:.78rem;color:#607d8b;margin-top:12px;line-height:1.6">
+        • <b>ET0</b>: تبخیر و تعرق مرجع فائو (Penman-Monteith)<br>
+        • <b>ETc</b> = Kc × ET0 (نیاز آبی محصول)<br>
+        • <b>رطوبت خاک</b>: m³/m³ از مدل هواشناسی (۰–۷ سانتی‌متر)<br>
+        • <b>سبزینگی تخمینی</b>: بر اساس مرحله رشد، تراز آبی و رطوبت خاک (نه NDVI ماهواره‌ای واقعی)<br>
+        در نسخه بعدی با اتصال تصاویر Sentinel/Landsat، NDVI واقعی همین زمین نمایش داده می‌شود.
+      </p>`;
+  }catch(e){
+    console.error(e);
+    resultBox.innerHTML = '<p style="color:#c62828">خطا در دریافت یا محاسبه داده.</p>';
+  }
+}
+
+function locateMeMapping(){
+  if(!navigator.geolocation)return alert("پشتیبانی نمی‌شود");
+  navigator.geolocation.getCurrentPosition(pos=>{
+    mappingMap.setView([pos.coords.latitude,pos.coords.longitude],18);
+  },()=>alert("دسترسی ممکن نشد"));
+}
+
+/* ===== Init ===== */
+
+/* ===== Micro-interactions (inspired by GitHub: ripple, magnetic, toast, confetti) ===== */
+function showToast(msg, type="success", duration=3200){
+  const box=document.getElementById("toast-container");
+  if(!box) return;
+  const t=document.createElement("div");
+  t.className="toast "+type;
+  t.innerHTML=(type==="success"?"✅ ":(type==="error"?"❌ ":"ℹ️ "))+msg;
+  box.appendChild(t);
+  gsap.to(t,{opacity:1,y:0,scale:1,duration:.45,ease:"back.out(1.6)"});
+  setTimeout(()=>{
+    gsap.to(t,{opacity:0,y:-16,scale:.9,duration:.35,onComplete:()=>t.remove()});
+  },duration);
+}
+
+function createRipple(e){
+  const btn=e.currentTarget;
+  if(!btn.classList.contains("btn-ripple")) btn.classList.add("btn-ripple");
+  const circle=document.createElement("span");
+  circle.className="ripple";
+  const d=Math.max(btn.clientWidth,btn.clientHeight);
+  circle.style.width=circle.style.height=d+"px";
+  const rect=btn.getBoundingClientRect();
+  circle.style.left=(e.clientX-rect.left-d/2)+"px";
+  circle.style.top=(e.clientY-rect.top-d/2)+"px";
+  btn.appendChild(circle);
+  setTimeout(()=>circle.remove(),600);
+}
+
+function enableRipples(){
+  document.querySelectorAll(".btn-main,.btn-secondary,.btn-success,.btn-danger,.map-controls button,.top-bar button").forEach(btn=>{
+    if(btn.dataset.ripple) return;
+    btn.dataset.ripple="1";
+    btn.classList.add("btn-ripple","press-feedback");
+    btn.addEventListener("click",createRipple);
+  });
+}
+
+function enableMagnetic(selector, strength=12){
+  document.querySelectorAll(selector).forEach(el=>{
+    if(el.dataset.magnetic) return;
+    el.dataset.magnetic="1";
+    el.classList.add("magnetic");
+    el.addEventListener("mousemove",e=>{
+      const r=el.getBoundingClientRect();
+      const x=(e.clientX-r.left-r.width/2)/ (r.width/2);
+      const y=(e.clientY-r.top-r.height/2)/ (r.height/2);
+      gsap.to(el,{x:x*strength,y:y*strength,duration:.3,ease:"power2.out"});
+    });
+    el.addEventListener("mouseleave",()=>{
+      gsap.to(el,{x:0,y:0,duration:.5,ease:"elastic.out(1,0.4)"});
+    });
+  });
+}
+
+function burstConfetti(count=40){
+  const layer=document.getElementById("confetti-layer");
+  if(!layer) return;
+  const colors=["#2e7d32","#f9a825","#1565c0","#c62828","#7b1fa2","#00897b","#ff6f00"];
+  for(let i=0;i<count;i++){
+    const p=document.createElement("div");
+    p.style.cssText=`position:absolute;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${colors[i%colors.length]};left:50%;top:40%;border-radius:${Math.random()>.5?"50%":"2px"};opacity:1;`;
+    layer.appendChild(p);
+    gsap.to(p,{
+      x:(Math.random()-0.5)*500,
+      y:200+Math.random()*400,
+      rotation:Math.random()*720,
+      opacity:0,
+      duration:1.2+Math.random()*1,
+      ease:"power2.out",
+      onComplete:()=>p.remove()
+    });
+  }
+}
+
+function initMicroInteractions(){
+  enableRipples();
+  enableMagnetic(".sphere3d", 10);
+  enableMagnetic(".wheat-cluster", 8);
+  // re-enable on dynamic content
+  const observer=new MutationObserver(()=>{enableRipples();});
+  observer.observe(document.body,{childList:true,subtree:true});
+}
+
+// Hook success feedback into existing actions
+const _origCompleteRegister = typeof completeRegister === "function" ? completeRegister : null;
+const _origFinishSave = typeof finishAndSaveLand === "function" ? finishAndSaveLand : null;
+
+
+/* Animate.css helper */
+function playAnimate(el, animation, duration){
+  if(!el) return;
+  el.classList.remove("animate__animated");
+  // force reflow
+  void el.offsetWidth;
+  if(duration) el.style.setProperty("--animate-duration", duration);
+  el.classList.add("animate__animated", "animate__"+animation);
+  const onEnd = ()=>{
+    el.classList.remove("animate__animated", "animate__"+animation);
+    el.removeEventListener("animationend", onEnd);
+  };
+  el.addEventListener("animationend", onEnd);
+}
+
+function animateSectionIn(secId){
+  const sec = document.getElementById(secId);
+  if(!sec) return;
+  // children only — section itself is handled by GSAP
+  sec.querySelectorAll(".sphere3d, .news-card, .service-card, .land-card, .et-panel, .glass-panel").forEach((c,i)=>{
+    setTimeout(()=>playAnimate(c, "zoomIn", "0.5s"), 60+i*75);
+  });
+  sec.querySelectorAll(".section-title, h3").forEach((c,i)=>{
+    setTimeout(()=>playAnimate(c, "fadeInDown", "0.45s"), 40+i*50);
+  });
+}
+
+// AOS - Animate On Scroll
+if(typeof AOS !== "undefined"){
+  AOS.init({
+    duration: 750,
+    easing: "ease-out-cubic",
+    once: true,
+    offset: 80,
+    delay: 0,
+    mirror: false
+  });
+}
+
+gsap.registerPlugin(ScrollTrigger);
+createParticles();
+initLandingAnimations();
+loadHeroWeather();
+setInterval(loadHeroWeather,15*60*1000);
+initMicroInteractions();
+</script>
+</body>
+</html>
